@@ -54,6 +54,30 @@ def create_graph(maze):
     return graph
 
 
+def bfs(graph, src, dest):
+    visited = []  # keep track of visited nodes
+    queue = [src]  # queue for implementing BFS; add src node to the queue
+    path = {}
+    if src == dest:
+        return "Source = Destination. Maze is solved."
+    # Run until the queue is empty
+    while queue:
+        # Remove one node from the queue and check if it has been visited or not
+        node = queue.pop(0)
+        if node == dest:
+            break
+        # get neighbors
+        neighbors = graph[node]
+        print(node, "->", neighbors)
+        for neighbor in neighbors:
+            if neighbor not in visited:
+                # visit neighbors and add to queue
+                queue.append(neighbor)
+                path[neighbor] = node
+        visited.append(node)
+    return path
+
+
 def get_neighbour(maze, step, i, j):
     neighbour = []
     for item in step:
@@ -113,7 +137,7 @@ def display(items):
         ax[index].matshow(item, cmap=cm.binary, aspect='equal')
         ax[index].set_xticks(np.arange(-0.5, size, 1))
         ax[index].set_yticks(np.arange(-0.5, size, 1))
-        ax[index].set_xticklabels(np.arange(0, size + 1, 1), rotation=90,horizontalalignment="right")
+        ax[index].set_xticklabels(np.arange(0, size + 1, 1), rotation=90, horizontalalignment="right")
         ax[index].set_yticklabels(np.arange(0, size + 1, 1), horizontalalignment="right")
         ax[index].grid(color='k', linestyle='-', linewidth=2)
     plt.show()
@@ -123,5 +147,3 @@ sols = create_mazes(10, 30, 0.1)
 sol = create_graph(sols[0])
 print(sol)
 display(sols)
-
-
