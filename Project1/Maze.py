@@ -41,7 +41,7 @@ def create_graph(maze):
                     edges = get_neighbour(maze, [(0, -1), (1, 0), (0, 1)], i, j)
                 # left layer excluding corners
                 elif check_left(i, j, maze):
-                    edges = get_neighbour(maze, [(0, 1), (1, 0), (0, 1)], i, j)
+                    edges = get_neighbour(maze, [(0, 1), (1, 0), (-1, 0)], i, j)
                 # bottom layer excluding corners
                 elif check_bottom(i, j, maze):
                     edges = get_neighbour(maze, [(0, -1), (0, 1), (-1, 0)], i, j)
