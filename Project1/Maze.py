@@ -77,11 +77,25 @@ def create_graph(maze):
                     if maze[i + step[0]][j + step[1]] == 0:
                         edges.append(((i + step[0]), (j + step[1])))
             graph[(i, j)] = edges
-
     return graph
+
+# def dfsutil(src, visited, graph, dest):
+#     if src == dest:
+#         return "Source is equal to destination"
+#     visited.append(src)
+#
+#
+# def dfs(graph, src, dest):
+#     # Mark all the vertices as not visited
+#     visited = []
+#     dfsutil(src, visited, graph)
+#     return 0
 
 
 num_maze = create_maze(10, 40, 0.1)
 sol = create_graph(num_maze)
+# path = dfs(sol, (0, 0), (num_maze.shape[0] - 1, num_maze.shape[0] - 1))
+# print("DFS: ", path)
 print(sol)
 plt.show()
+
