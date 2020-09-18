@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import matplotlib.cm as cm
 import datetime as t
 
@@ -95,7 +96,6 @@ def dfs(graph, src, dest):
             return ["S", node, path, timetakem]
         # get neighbors
         neighbors = graph[node]
-        print(node, "->", neighbors)
         for neighbor in neighbors:
             if neighbor not in visited and neighbor not in stack:
                 # visit neighbors and add to queue
@@ -171,15 +171,22 @@ def check_right(i, j, maze):
 
 
 def display(items):
-    fig, ax = plt.subplots(1, (len(items)))
-    for index, item in enumerate(items):
-        size = item.shape[0]
-        ax[index].matshow(item, cmap=cm.binary,)
-        ax[index].set_xticks(np.arange(-0.5, size, 1))
-        ax[index].set_yticks(np.arange(-0.5, size, 1))
-        ax[index].set_xticklabels(np.arange(0, size + 1, 1), rotation=90, horizontalalignment="right")
-        ax[index].set_yticklabels(np.arange(0, size + 1, 1), horizontalalignment="right")
-        ax[index].grid(color='k', linestyle='-', linewidth=2)
+    fig = plt.figure()
+    print(len(items))
+    gs = gridspec.GridSpec(2, len(items) // 2)
+    item = enumerate(items)
+    for ss in gs:
+        m = next(item)[1]
+        size = m.shape[0]
+        ax = fig.add_subplot(ss)
+        ax.matshow(m, cmap=cm.binary, )
+        ax.set_title("Maze with size " + str(size))
+        ax.set_xticks(np.arange(-0.5, size, 1))
+        ax.set_yticks(np.arange(-0.5, size, 1))
+        ax.set_xticklabels(np.arange(0, size + 1, 1), rotation=90, horizontalalignment="right")
+        ax.set_yticklabels(np.arange(0, size + 1, 1), horizontalalignment="right")
+        ax.grid(color='k', linestyle='-', linewidth=2)
+    gs.tight_layout(fig, rect=[0, 0, 1, 1])
     plt.show()
 
 
@@ -193,7 +200,7 @@ def letsfind():
         maze = create_maze(size, blockdensity)
         print("Maze Moving to Next")
         graph = create_graph(maze)
-        print("Graph Moving to Next"+ str(graph))
+        print("Graph Moving to Next" + str(graph))
         start = (0, 0)
         end = ((maze.shape[0] - 1), (maze.shape[0] - 1))
         bfs_sol = bfs(graph, start, end)
@@ -214,9 +221,20 @@ def letsfind():
     print(bfs_path)
     print(dfs_path)
 
-    fig, ax = plt.subplots(1, 2)
-    ax[0].scatter(maze_size, bfs_time)
-    ax[1].scatter(maze_size, dfs_time)
+    fig = plt.figure()
+    gs = gridspec.GridSpec(1, 2)
+    ax1 = fig.add_subplot(gs[0])
+    ax1.scatter(maze_size, bfs_time)
+    ax1.set_title("Size vs Computation Time BFS")
+    ax1.set_xticks(np.arange(startsize, (endsize + step), step))
+    ax1.set_xlabel("Size")
+    ax1.set_ylabel("Time is microseconds")
+    ax2 = fig.add_subplot(gs[1])
+    ax2.scatter(maze_size, dfs_time)
+    ax2.set_title("Size vs Computation Time DFS")
+    ax2.set_xticks(np.arange(startsize, (endsize + step), step))
+    ax2.set_xlabel("Size")
+    ax2.set_ylabel("Time is microseconds")
     display(mazes)
 
 
