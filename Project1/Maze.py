@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.cm as cm
 import datetime as t
+import math as m
 
 
 def create_maze(size, p):
@@ -102,8 +103,49 @@ def dfs(graph, src, dest):
                 stack.append(neighbor)
                 path[neighbor] = node
         visited.append(node)
-    timetakem = (t.datetime.now() - start_time).microseconds
-    return ["F", None, None, timetakem]
+    timetaken = (t.datetime.now() - start_time).microseconds
+    return ["F", None, None, timetaken]
+
+
+def dijkstra(graph, src, dest):
+    start_time = t.datetime.now()
+    dist = {}
+    processed = {}
+    prev = {}
+    for v in graph.keys():
+        dist[v] = m.inf
+        processed[v] = False
+        prev[v] = None
+
+    dist[src] = 0
+    pqueue = [{src: dist[src]}]
+    prev[src] = src
+
+    while pqueue:
+        node = pqueue.pop(0)
+        v = list(node.keys())[0]
+        d = node.get(v)
+        if not (processed.get(v)):
+            for u in graph.get(v):
+                if d + 1 < dist[u]:
+                    dist[u] = d + 1
+                    addupdatepqueue(pqueue, u, dist[u])
+                    prev[u] = v
+        processed[v] = True
+    path = get_path(prev, src, dest)
+    timetaken = (t.datetime.now() - start_time).microseconds
+    if path is None:
+        return "F", None, None, timetaken
+    else:
+        return "S", dest, path, timetaken
+
+
+def addupdatepqueue(pqueue, n, c):
+    for item in pqueue:
+        if n in list(item.keys()):
+            item[n] = c
+            break
+    pqueue.append({n: c})
 
 
 def get_path(path, src, dest):
@@ -112,6 +154,8 @@ def get_path(path, src, dest):
     parent = dest
     while parent != src:
         parent = path.get(child)
+        if parent is None:
+            return None
         pathtaken.append(parent)
         child = parent
     pathtaken.reverse()
@@ -207,8 +251,10 @@ def letsfind():
         print("BFS  Moving to Next")
         dfs_sol = dfs(graph, start, end)
         print("DFS  Moving to Next")
+        dijk_sol = dijkstra(graph, start, end)
+        print("Dijks Moving to Next")
         data[index] = {"size": size, "maze": maze, "bfs_path": bfs_sol[2], "bfs_time": bfs_sol[3],
-                       "dfs_path": dfs_sol[2], "dfs_time": dfs_sol[3]}
+                       "dfs_path": dfs_sol[2], "dfs_time": dfs_sol[3],"dijk_path": dijk_sol[2], "dijk_time": dijk_sol[3]}
         print("Moving to Next Maze")
 
     maze_size = list(map(lambda key: (data.get(key)).get("size"), data.keys()))
@@ -217,12 +263,15 @@ def letsfind():
     bfs_path = list(map(lambda key: (data.get(key)).get("bfs_path"), data.keys()))
     dfs_time = list(map(lambda key: (data.get(key)).get("dfs_time"), data.keys()))
     dfs_path = list(map(lambda key: (data.get(key)).get("dfs_path"), data.keys()))
+    dijk_time = list(map(lambda key: (data.get(key)).get("dijk_time"), data.keys()))
+    dijk_path = list(map(lambda key: (data.get(key)).get("dijk_path"), data.keys()))
 
     print(bfs_path)
     print(dfs_path)
+    print(dijk_path)
 
     fig = plt.figure()
-    gs = gridspec.GridSpec(1, 2)
+    gs = gridspec.GridSpec(3, 1)
     ax1 = fig.add_subplot(gs[0])
     ax1.scatter(maze_size, bfs_time)
     ax1.set_title("Size vs Computation Time BFS")
@@ -235,6 +284,12 @@ def letsfind():
     ax2.set_xticks(np.arange(startsize, (endsize + step), step))
     ax2.set_xlabel("Size")
     ax2.set_ylabel("Time is microseconds")
+    ax3 = fig.add_subplot(gs[2])
+    ax3.scatter(maze_size, dijk_time)
+    ax3.set_title("Size vs Computation Time DIJKS")
+    ax3.set_xticks(np.arange(startsize, (endsize + step), step))
+    ax3.set_xlabel("Size")
+    ax3.set_ylabel("Time is microseconds")
     display(mazes)
 
 
