@@ -106,6 +106,38 @@ def dfs(graph, src, dest):
     timetaken = (t.datetime.now() - start_time).microseconds
     return ["F", None, None, timetaken]
 
+def bibfs(graph, src, dest):
+    start_time = t.datetime.now()
+    # queues for front and back search
+    f_queue, b_queue = [], []
+
+    f_queue.append(src)
+    b_queue.append(dest)
+
+    while f_queue and b_queue:
+        # run bfs on src_queue
+        bfs_sol1 = bfs(graph, src, dest)
+        s_path = bfs_sol1[2]
+
+        # run bfs on dest_queue
+        bfs_sol2 = bfs(graph, dest, src)
+        d_path = bfs_sol2[2]
+        
+        path = []
+
+        # check for intersecting node
+        for i in range(len(s_path)):
+            if s_path[i] == d_path[i]:
+                intersect = i
+                for j in range(intersect+1):
+                    path.append(s_path[j])
+                
+                d_path = d_path[::-1]
+                for k in range(intersect+1, len(d_path)):
+                    path.append(d_path[k])
+                timetaken = t.datetime.now() - start_time
+                
+                return path, timetaken
 
 def dijkstra(graph, src, dest):
     start_time = t.datetime.now()
@@ -252,7 +284,9 @@ def letsfind():
         dfs_sol = dfs(graph, start, end)
         print("DFS  Moving to Next")
         dijk_sol = dijkstra(graph, start, end)
-        print("Dijks Moving to Next")
+        print("Dijkstra Moving to Next")
+        # bibfs_path, timetaken = bibfs(graph, start, end)
+        # print("Bidirectional BFS Moving to Next")
         data[index] = {"size": size, "maze": maze, "bfs_path": bfs_sol[2], "bfs_time": bfs_sol[3],
                        "dfs_path": dfs_sol[2], "dfs_time": dfs_sol[3],"dijk_path": dijk_sol[2], "dijk_time": dijk_sol[3]}
         print("Moving to Next Maze")
@@ -269,6 +303,7 @@ def letsfind():
     print(bfs_path)
     print(dfs_path)
     print(dijk_path)
+    # print("Bidirectional BFS path: ", bibfs_path)
 
     fig = plt.figure()
     gs = gridspec.GridSpec(3, 1)
