@@ -6,8 +6,8 @@ import datetime as t
 import math as m
 
 
-def create_maze(size, p):
-    num = [[0 if np.random.random() > p else 1 for i in range(size)] for j in range(size)]
+def create_maze(size, prob):
+    num = [[np.random.choice(np.arange(2), 1, p=[1-prob, prob])for i in range(size)] for j in range(size)]
     num_arr = np.array(num)
     num_arr[0][0] = 0
     num_arr[size - 1][size - 1] = 0
@@ -144,7 +144,6 @@ def idfs(graph, src, dest, maxDepth):
 def callidfs (graph,src,des,step):
     idfs_sol = []
     for i in range(1,len(graph.keys()),step):
-        print(i)
         idfs_sol = idfs(graph, src, des, i)
         visited = idfs_sol[3]
         if "S" == idfs_sol[0]:
@@ -395,7 +394,7 @@ def letsfind():
     # print("Bidirectional BFS path: ", bibfs_path)
 
     fig = plt.figure()
-    gs = gridspec.GridSpec(2, 2)
+    gs = gridspec.GridSpec(2, 3)
     ax1 = fig.add_subplot(gs[0])
     ax1.scatter(maze_size, bfs_time)
     ax1.set_title("Size vs Computation Time BFS")
@@ -420,7 +419,13 @@ def letsfind():
     ax4.set_xticks(np.arange(startsize, (endsize + step), step))
     ax4.set_xlabel("Size")
     ax4.set_ylabel("Time is microseconds")
-    display(mazes)
+    ax5 = fig.add_subplot(gs[4])
+    ax5.scatter(maze_size, idfs_time)
+    ax5.set_title("Size vs Computation Time IDFS")
+    ax5.set_xticks(np.arange(startsize, (endsize + step), step))
+    ax5.set_xlabel("Size")
+    ax5.set_ylabel("Time is microseconds")
+    #display(mazes)
 
 
-letsfind()
+#letsfind()
