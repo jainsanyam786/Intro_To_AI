@@ -107,6 +107,51 @@ def dfs(graph, src, dest):
     return ["F", None, None, timetaken]
 
 
+def idfs(graph, src, dest, maxDepth):
+    start_time = t.datetime.now()
+    visited = []
+      # keep track of visited nodes
+    stack = [src]  # queue for implementing BFS; add src node to the queue
+    path = {}
+    if src == dest:
+        return "Source = Destination. Maze is solved."
+    # Run until the queue is empty
+    while stack:
+        # Remove one node from the queue and check if it has been visited or not
+        node = stack.pop()
+
+        if node == dest:
+            path = get_path(path, src, dest)
+            timetaken = (t.datetime.now() - start_time).microseconds
+            return ["S", node, path,timetaken]
+
+            # get neighbors and restrict it to a desired level
+        if maxDepth > 0:
+            neighbors = graph[node]
+            for neighbor in neighbors:
+                # if neighbor not in visited and neighbor not in stack:
+                # visit neighbors and add to queue
+                if neighbor not in visited and neighbor not in stack:
+                    stack.append(neighbor)
+                    path[neighbor] = node
+
+            maxDepth = maxDepth - 1
+
+        visited.append(node)
+    timetaken = (t.datetime.now() - start_time).microseconds
+    return ["F", None, None, timetaken]
+
+def callidfs (graph,src,des,step):
+    idfs_sol = []
+    for i in range(1,len(graph.keys()),step):
+        print(i)
+        idfs_sol = idfs(graph, src, des, i)
+        visited = idfs_sol[3]
+        if "S" == idfs_sol[0]:
+            break
+    return idfs_sol
+
+
 def bibfs(graph, src, dest):
     start_time = t.datetime.now()
     # keep track of visited nodes
@@ -315,10 +360,17 @@ def letsfind():
         dijk_sol = dijkstra(graph, start, end)
         print("Dijkstra Moving to Next")
         bibfs_sol = bibfs(graph, start, end)
+
+        # yet to create a condition to decide maxDepth for no of nodes keys/divisor
+        idfs_sol = callidfs(graph, start, end, 2)
+        print("Iterative DFS Moving to Next")
+
+        # bibfs_path, timetaken = bibfs(graph, start, end)
         # print("Bidirectional BFS Moving to Next")
         data[index] = {"size": size, "maze": maze, "bfs_path": bfs_sol[2], "bfs_time": bfs_sol[3],
                        "dfs_path": dfs_sol[2], "dfs_time": dfs_sol[3], "dijk_path": dijk_sol[2],
-                       "dijk_time": dijk_sol[3], "bibfs_path": bibfs_sol[2],
+                       "dijk_time": dijk_sol[3], "idfs_path": idfs_sol[2], "idfs_time": idfs_sol[3],
+                       "bibfs_path": bibfs_sol[2],
                        "bibfs_time": bibfs_sol[3]}
         print("Moving to Next Maze")
 
@@ -328,6 +380,8 @@ def letsfind():
     bfs_path = list(map(lambda key: (data.get(key)).get("bfs_path"), data.keys()))
     dfs_time = list(map(lambda key: (data.get(key)).get("dfs_time"), data.keys()))
     dfs_path = list(map(lambda key: (data.get(key)).get("dfs_path"), data.keys()))
+    idfs_time = list(map(lambda key: (data.get(key)).get("idfs_time"), data.keys()))
+    idfs_path = list(map(lambda key: (data.get(key)).get("idfs_path"), data.keys()))
     dijk_time = list(map(lambda key: (data.get(key)).get("dijk_time"), data.keys()))
     dijk_path = list(map(lambda key: (data.get(key)).get("dijk_path"), data.keys()))
     bibfs_time = list(map(lambda key: (data.get(key)).get("dijk_time"), data.keys()))
@@ -335,6 +389,7 @@ def letsfind():
 
     print(bfs_path)
     print(dfs_path)
+    print(idfs_path)
     print(dijk_path)
     print(bibfs_path)
     # print("Bidirectional BFS path: ", bibfs_path)
