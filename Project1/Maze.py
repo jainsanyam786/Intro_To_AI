@@ -106,38 +106,47 @@ def dfs(graph, src, dest):
     timetaken = (t.datetime.now() - start_time).microseconds
     return ["F", None, None, timetaken]
 
+
 def bibfs(graph, src, dest):
     start_time = t.datetime.now()
-    # queues for front and back search
-    f_queue, b_queue = [], []
+    # keep track of visited nodes
+    fvisited = []
+    bvisited = []
+    # queue for implementing BFS; add src node to the queue
+    f_queue, b_queue = [src], [dest]
 
-    f_queue.append(src)
-    b_queue.append(dest)
-
+    fpath = {}
+    bpath = {}
+    if src == dest:
+        return "Source = Destination. Maze is solved."
+    # Run until the queue is empty
     while f_queue and b_queue:
-        # run bfs on src_queue
-        bfs_sol1 = bfs(graph, src, dest)
-        s_path = bfs_sol1[2]
+        # Remove one node from the queue and check if it has been visited or not
+        search(f_queue, fvisited, fpath, graph)
+        search(b_queue, bvisited, bpath, graph)
+        if set(fvisited) & set(bvisited):
+            tpath1 = get_path(fpath, src, list(set(fvisited) & set(bvisited)).pop())
+            tpath2 = get_path(bpath, dest, list(set(fvisited) & set(bvisited)).pop())
+            tpath2.pop()
+            tpath2.reverse()
+            path = tpath1 + tpath2
+            timetaken = (t.datetime.now() - start_time).microseconds
+            return ["S", dest, path, timetaken]
 
-        # run bfs on dest_queue
-        bfs_sol2 = bfs(graph, dest, src)
-        d_path = bfs_sol2[2]
-        
-        path = []
+    timetaken = (t.datetime.now() - start_time).microseconds
+    return ["F", fpath, bpath, timetaken]
 
-        # check for intersecting node
-        for i in range(len(s_path)):
-            if s_path[i] == d_path[i]:
-                intersect = i
-                for j in range(intersect+1):
-                    path.append(s_path[j])
-                
-                d_path = d_path[::-1]
-                for k in range(intersect+1, len(d_path)):
-                    path.append(d_path[k])
-                timetaken = t.datetime.now() - start_time
-                
-                return path, timetaken
+
+def search(queue, visited, path, graph):
+    node = queue.pop(0)
+    neighbors = graph.get(node)
+    for neighbor in neighbors:
+        if neighbor not in visited and neighbor not in queue:
+            # visit neighbors and add to queue
+            queue.append(neighbor)
+            path[neighbor] = node
+    visited.append(node)
+
 
 def dijkstra(graph, src, dest):
     start_time = t.datetime.now()
@@ -246,6 +255,26 @@ def check_right(i, j, maze):
         return False
 
 
+def let_there_be_fire(graph, src, dest):
+    # Extract the keys (nodes) of the graph
+    graph_keys = list(graph.keys())
+    length = len(graph_keys)
+    for i in range(length):
+        # Generate a random number from 0 to length-1
+        num = np.random.choice(np.arange(length), 1, replace=False)[0]
+        if num != 0 and num != length - 1 and dfs(graph, src, graph_keys[num])[0] == 'S' and num is not None:
+            firenode = graph_keys[num]
+            return firenode
+
+
+# code for setting fire and solution
+# if fn is not None:
+#     maze[fn[0]][fn[1]] = 3
+# if result1[0] == "S":
+#     for i in result1[2]:
+#         maze[i[0]][i[1]] = 2
+
+
 def display(items):
     fig = plt.figure()
     print(len(items))
@@ -255,7 +284,7 @@ def display(items):
         m = next(item)[1]
         size = m.shape[0]
         ax = fig.add_subplot(ss)
-        ax.matshow(m, cmap=cm.binary, )
+        ax.matshow(m, cmap=cm.binary)
         ax.set_title("Maze with size " + str(size))
         ax.set_xticks(np.arange(-0.5, size, 1))
         ax.set_yticks(np.arange(-0.5, size, 1))
@@ -285,10 +314,12 @@ def letsfind():
         print("DFS  Moving to Next")
         dijk_sol = dijkstra(graph, start, end)
         print("Dijkstra Moving to Next")
-        # bibfs_path, timetaken = bibfs(graph, start, end)
+        bibfs_sol = bibfs(graph, start, end)
         # print("Bidirectional BFS Moving to Next")
         data[index] = {"size": size, "maze": maze, "bfs_path": bfs_sol[2], "bfs_time": bfs_sol[3],
-                       "dfs_path": dfs_sol[2], "dfs_time": dfs_sol[3],"dijk_path": dijk_sol[2], "dijk_time": dijk_sol[3]}
+                       "dfs_path": dfs_sol[2], "dfs_time": dfs_sol[3], "dijk_path": dijk_sol[2],
+                       "dijk_time": dijk_sol[3], "bibfs_path": bibfs_sol[2],
+                       "bibfs_time": bibfs_sol[3]}
         print("Moving to Next Maze")
 
     maze_size = list(map(lambda key: (data.get(key)).get("size"), data.keys()))
@@ -299,14 +330,17 @@ def letsfind():
     dfs_path = list(map(lambda key: (data.get(key)).get("dfs_path"), data.keys()))
     dijk_time = list(map(lambda key: (data.get(key)).get("dijk_time"), data.keys()))
     dijk_path = list(map(lambda key: (data.get(key)).get("dijk_path"), data.keys()))
+    bibfs_time = list(map(lambda key: (data.get(key)).get("dijk_time"), data.keys()))
+    bibfs_path = list(map(lambda key: (data.get(key)).get("dijk_path"), data.keys()))
 
     print(bfs_path)
     print(dfs_path)
     print(dijk_path)
+    print(bibfs_path)
     # print("Bidirectional BFS path: ", bibfs_path)
 
     fig = plt.figure()
-    gs = gridspec.GridSpec(3, 1)
+    gs = gridspec.GridSpec(2, 2)
     ax1 = fig.add_subplot(gs[0])
     ax1.scatter(maze_size, bfs_time)
     ax1.set_title("Size vs Computation Time BFS")
@@ -325,6 +359,12 @@ def letsfind():
     ax3.set_xticks(np.arange(startsize, (endsize + step), step))
     ax3.set_xlabel("Size")
     ax3.set_ylabel("Time is microseconds")
+    ax4 = fig.add_subplot(gs[3])
+    ax4.scatter(maze_size, bibfs_time)
+    ax4.set_title("Size vs Computation Time BIBFS")
+    ax4.set_xticks(np.arange(startsize, (endsize + step), step))
+    ax4.set_xlabel("Size")
+    ax4.set_ylabel("Time is microseconds")
     display(mazes)
 
 
