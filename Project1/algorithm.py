@@ -8,7 +8,8 @@ def bfs(graph, src, dest):
     queue = [src]  # queue for implementing BFS; add src node to the queue
     path = {}
     if src == dest:
-        return "Source = Destination. Maze is solved."
+        timetaken = (t.datetime.now() - start_time).microseconds
+        return ["S", dest, path[dest], timetaken]
     # Run until the queue is empty
     while queue:
         # Remove one node from the queue and check if it has been visited or not
@@ -36,7 +37,8 @@ def dfs(graph, src, dest):
     stack = [src]  # queue for implementing BFS; add src node to the queue
     path = {}
     if src == dest:
-        return "Source = Destination. Maze is solved."
+        timetaken = (t.datetime.now() - start_time).microseconds
+        return ["S", dest, path[dest], timetaken]
     # Run until the queue is empty
     while stack:
         # Remove one node from the queue and check if it has been visited or not
@@ -57,49 +59,35 @@ def dfs(graph, src, dest):
     return ["F", None, None, timetaken]
 
 
-def idfs(graph, src, dest, maxdepth):
-    start_time = t.datetime.now()
-    visited = []
-    # keep track of visited nodes
-    stack = [src]  # queue for implementing BFS; add src node to the queue
-    path = {}
-    if src == dest:
-        return "Source = Destination. Maze is solved."
-    # Run until the queue is empty
-    while stack:
-        # Remove one node from the queue and check if it has been visited or not
-        node = stack.pop()
+def callidfs(graph, src, des, size):
 
-        if node == dest:
-            path = get_path(path, src, dest)
-            timetaken = (t.datetime.now() - start_time).microseconds
-            return ["S", node, path, timetaken]
+    def idfs(gr, s, tar, maxDepth):
+        currentnode = s
+        if s == tar:
+            return True
 
-            # get neighbors and restrict it to a desired level
-        if maxdepth > 0:
-            neighbors = graph[node]
-            for neighbor in neighbors:
-                # if neighbor not in visited and neighbor not in stack:
-                # visit neighbors and add to queue
-                if neighbor not in visited and neighbor not in stack:
-                    stack.append(neighbor)
-                    path[neighbor] = node
+        # If reached the maximum depth, stop recursing.
+        elif maxDepth <= 0:
+            return False
+        else:
+            if currentnode not in vv:
+                for i in gr[src]:
+                    if i not in vv:
+                        path[i] = currentnode
+                        vv.add(currentnode)
+                        if idfs(gr, i, tar, maxDepth - 1):
+                            return True
+        return False
 
-            maxdepth = maxdepth - 1
-
-        visited.append(node)
-    timetaken = (t.datetime.now() - start_time).microseconds
-    return ["F", None, None, timetaken]
-
-
-def callidfs(graph, src, des, step):
-    idfs_sol = []
-    for i in range(1, len(graph.keys()), step):
-        idfs_sol = idfs(graph, src, des, i)
-        visited = idfs_sol[3]
-        if "S" == idfs_sol[0]:
+    for j in range(5, len(graph.keys())):
+        print(j)
+        vv = set([])
+        path = {}
+        sol = idfs(graph, src, des, j)
+        if sol:
+            print("success")
+            print(get_path(path, (0, 0), (4, 4)))
             break
-    return idfs_sol
 
 
 def bibfs(graph, src, dest):
@@ -107,13 +95,15 @@ def bibfs(graph, src, dest):
     # keep track of visited nodes
     fvisited = []
     bvisited = []
+    path = []
     # queue for implementing BFS; add src node to the queue
     f_queue, b_queue = [src], [dest]
 
     fpath = {}
     bpath = {}
     if src == dest:
-        return "Source = Destination. Maze is solved."
+        timetaken = (t.datetime.now() - start_time).microseconds
+        return ["S", dest, path[dest], timetaken]
     # Run until the queue is empty
     while f_queue and b_queue:
         # Remove one node from the queue and check if it has been visited or not
@@ -129,18 +119,19 @@ def bibfs(graph, src, dest):
             return ["S", dest, path, timetaken]
 
     timetaken = (t.datetime.now() - start_time).microseconds
-    return ["F", fpath, bpath, timetaken]
+    return ["F", None, None, timetaken]
 
 
 def search(queue, visited, path, graph):
     node = queue.pop(0)
     neighbors = graph.get(node)
-    for neighbor in neighbors:
-        if neighbor not in visited and neighbor not in queue:
-            # visit neighbors and add to queue
-            queue.append(neighbor)
-            path[neighbor] = node
-    visited.append(node)
+    if neighbors is not None:
+        for neighbor in neighbors:
+            if neighbor not in visited and neighbor not in queue:
+                # visit neighbors and add to queue
+                queue.append(neighbor)
+                path[neighbor] = node
+        visited.append(node)
 
 
 def dijkstra(graph, src, dest):
@@ -196,3 +187,18 @@ def get_path(path, src, dest):
         child = parent
     pathtaken.reverse()
     return pathtaken
+
+
+def get_step(size):
+    if size <= 10:
+        return 2
+    elif 10 < size <= 30:
+        return 5
+    elif 30 < size <= 50:
+        return 10
+    elif 50 < size <= 70:
+        return 15
+    elif 70 < size <= 100:
+        return 20
+    else:
+        return 25

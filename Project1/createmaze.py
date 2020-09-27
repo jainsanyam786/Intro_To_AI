@@ -16,7 +16,7 @@ def create_graph(maze):
     graph = {}
     for i in range(maze.shape[0]):
         for j in range(maze.shape[1]):
-            if maze[i][j] == 0:
+            if maze[i][j] not in [1, 3]:
                 edges = []
                 # corner
                 if check_corner(i, j, maze):
@@ -51,7 +51,7 @@ def create_graph(maze):
 def get_neighbour(maze, step, i, j):
     neighbour = []
     for item in step:
-        if maze[i + item[0]][j + item[1]] == 0:
+        if maze[i + item[0]][j + item[1]] not in [1, 3]:
             neighbour.append(((i + item[0]), (j + item[1])))
     return neighbour
 
