@@ -1,5 +1,6 @@
 import datetime as t
 import math as m
+import createmaze as cm
 
 
 # These algorithms are used to find the shortest path for the agent to reach till destination hopefully
@@ -75,13 +76,15 @@ def dfs(graph, src, dest):
 
 
 # Needs more explanation
+# FOr large sizes, IDFS won't work
 # Iterative Depth First Search, Source and Destination with the created graph is passed as arguments
 # 'maxDepth' variable is used to search for the required depth needed and to not waste the extra loops to find the dest
 def callidfs(graph, src, des, size):
+
     start_time = t.datetime.now()
     def idfs(gr, s, tar, maxDepth):     # gr is graph, s is source, tar is destionation
         currentnode = s
-        if s == tar:
+        if currentnode == tar:
             return True
 
         # If reached the maximum depth, stop recursing.
@@ -89,24 +92,31 @@ def callidfs(graph, src, des, size):
             return False
         else:
             if currentnode not in vv:                     # Recursive call to find the destination till required depth
-                for i in gr[src]:
+                for i in gr[currentnode]:
                     if i not in vv:
                         path[i] = currentnode
                         vv.add(currentnode)
                         if idfs(gr, i, tar, maxDepth - 1):
                             return True
         return False
+    try:
+        for j in range(get_step(size), len(graph.keys()), get_step(size)):
+            #print(j)
+            vv = set([])
+            path = {}
+            sol = idfs(graph, src, des, j)
+            #print(sol)
+            #print(j)
+            if sol:
+                print(get_path(path, src, des))
+                timetaken = (t.datetime.now() - start_time).microseconds
+                return ["S", des, get_path(path, src, des), timetaken]
+         # return statement for failure
 
-    for j in range(get_step(size), len(graph.keys()), get_step(size)):
-        #print(j)
-        vv = set([])
-        path = {}
-        sol = idfs(graph, src, des, j)
-        if sol:
-            print(get_path(path, src, des))
-            timetaken = (t.datetime.now() - start_time).microseconds
-            return ["S", des, get_path(path, src, des), timetaken]
-     # return statement for failure
+    except RecursionError:
+        print("Error")
+        timetaken = (t.datetime.now() - start_time).microseconds
+        return ["F", None, [], timetaken]
     timetaken = (t.datetime.now() - start_time).microseconds
     return ["F", None, [], timetaken]
 
