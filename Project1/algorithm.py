@@ -2,12 +2,21 @@ import datetime as t
 import math as m
 
 
+# These algorithms are used to find the shortest path for the agent to reach till destination hopefully
+
+
+# Breadth First Search, Source and Destination with the created graph is passed as arguments
+# First we created a queue to store the visited nodes, dictionary to store the path
+# Storing total time taken in timetaken variable
+# Using while loop until the queue is empty and popping out the node in 'FIFO' manner
+# Checked the neighbors of a specific node, if not visited and not in queue then add to the queue.
+# This function returns Success(S)/Failure(F) for finding the path.
 def bfs(graph, src, dest):
     start_time = t.datetime.now()
     visited = []  # keep track of visited nodes
     queue = [src]  # queue for implementing BFS; add src node to the queue
     path = {}
-    if src == dest:
+    if src == dest:  # Checking source as destination
         timetaken = (t.datetime.now() - start_time).microseconds
         return ["S", dest, path[dest], timetaken]
     # Run until the queue is empty
@@ -28,40 +37,48 @@ def bfs(graph, src, dest):
                 path[neighbor] = node
         visited.append(node)
     timetaken = (t.datetime.now() - start_time).microseconds
-    return ["F", None, None, timetaken]
+    return ["F", None, [], timetaken]
 
 
+# Depth First Search, Source and Destination with the created graph is passed as arguments
+# First we created a stack for storing the visited nodes, dictionary to store the path
+# Storing total time taken in timetaken variable
+# Using while loop until the stack is empty and popping out the node in 'LIFO' manner
+# Checked the neighbors of a specific node, if not visited and not in queue then add to the Stack.
+# This function returns Success(S)/Failure(F) for finding the path.
 def dfs(graph, src, dest):
     start_time = t.datetime.now()
     visited = []  # keep track of visited nodes
-    stack = [src]  # queue for implementing BFS; add src node to the queue
+    stack = [src]  # stack for implementing DFS; add src node to the stack
     path = {}
-    if src == dest:
+    if src == dest:  # Checking source as destination
         timetaken = (t.datetime.now() - start_time).microseconds
         return ["S", dest, path[dest], timetaken]
     # Run until the queue is empty
     while stack:
-        # Remove one node from the queue and check if it has been visited or not
+        # Remove one node from the stack and check if it has been visited or not
         node = stack.pop()
-        if node == dest:
+        if node == dest:  # Checking node as destination
             path = get_path(path, src, dest)
             timetakem = (t.datetime.now() - start_time).microseconds
             return ["S", node, path, timetakem]
         # get neighbors
         neighbors = graph[node]
-        for neighbor in neighbors:
+        for neighbor in neighbors:  # Checking for neighbors
             if neighbor not in visited and neighbor not in stack:
                 # visit neighbors and add to queue
                 stack.append(neighbor)
                 path[neighbor] = node
         visited.append(node)
     timetaken = (t.datetime.now() - start_time).microseconds
-    return ["F", None, None, timetaken]
+    return ["F", None, [], timetaken]
 
 
+# Needs more explanation
+# Iterative Depth First Search, Source and Destination with the created graph is passed as arguments
+# 'maxDepth' variable is used to search for the required depth needed and to not waste the extra loops to find the dest
 def callidfs(graph, src, des, size):
-
-    def idfs(gr, s, tar, maxDepth):
+    def idfs(gr, s, tar, maxDepth):     # gr is graph, s is source, tar is destionation
         currentnode = s
         if s == tar:
             return True
@@ -70,7 +87,7 @@ def callidfs(graph, src, des, size):
         elif maxDepth <= 0:
             return False
         else:
-            if currentnode not in vv:
+            if currentnode not in vv:                     # Recursive call to find the destination till required depth
                 for i in gr[src]:
                     if i not in vv:
                         path[i] = currentnode
@@ -90,6 +107,8 @@ def callidfs(graph, src, des, size):
             break
 
 
+# Bidirectional Breadth First Search, Source and Destination with the created graph is passed as arguments
+# 2 queues are used to travel from source and destination and to find the common link in between
 def bibfs(graph, src, dest):
     start_time = t.datetime.now()
     # keep track of visited nodes
@@ -119,9 +138,10 @@ def bibfs(graph, src, dest):
             return ["S", dest, path, timetaken]
 
     timetaken = (t.datetime.now() - start_time).microseconds
-    return ["F", None, None, timetaken]
+    return ["F", None, [], timetaken]
 
 
+# Search function to find the neighbors and add to the queue
 def search(queue, visited, path, graph):
     node = queue.pop(0)
     neighbors = graph.get(node)
@@ -134,6 +154,8 @@ def search(queue, visited, path, graph):
         visited.append(node)
 
 
+# Needs more explanation
+# Dijkastra,
 def dijkstra(graph, src, dest):
     start_time = t.datetime.now()
     dist = {}
@@ -162,11 +184,12 @@ def dijkstra(graph, src, dest):
     path = get_path(prev, src, dest)
     timetaken = (t.datetime.now() - start_time).microseconds
     if path is None:
-        return "F", None, None, timetaken
+        return "F", None, [], timetaken
     else:
         return "S", dest, path, timetaken
 
 
+# Needs more explanation
 def addupdatepqueue(pqueue, n, c):
     for item in pqueue:
         if n in list(item.keys()):
@@ -175,6 +198,7 @@ def addupdatepqueue(pqueue, n, c):
     pqueue.append({n: c})
 
 
+# Function to find the path until the parent is source
 def get_path(path, src, dest):
     pathtaken = [dest]
     child = dest
@@ -189,8 +213,9 @@ def get_path(path, src, dest):
     return pathtaken
 
 
+# Function to select a particular size for maxDepth as the maze size increases
 def get_step(size):
-    if size <= 10:
+    if size <= 10:                   # 10 is maze size
         return 2
     elif 10 < size <= 30:
         return 5
