@@ -39,14 +39,12 @@ def letsfind():
     endsize = int(input("Enter the max size "))
     step = int(input("Enter the growth size "))
     data = {}  # The main dictionary
-    probability_list = [0.1, 0.3, 0.5, 0.7, 0.9]  # Probability list
+    probability_list = [0.3]  # Probability list
 
     for probability in probability_list:  # Looping for each probability
         subdict = {}
         for size in range(startsize, endsize + step, step):  # Looping for each size defined
-            successcount_bfs = 0
-                                               # Initializations
-
+            successcount_bfs = 0           # Initializations
             successcount_idfs = 0
             paths_bfs = []
             paths_dfs = []
@@ -82,25 +80,20 @@ def letsfind():
                 print("DFS  Moving to Next")
                 paths_dfs.append(len(dfs_sol[2]))
                 time_dfs.append(dfs_sol[3])
-                #if dfs_sol[0] == "S":
-                   # successcount_dfs = successcount_dfs + 1
+
 
                 dijk_sol = al.dijkstra(graph, start, end)  # DIJKSTRA
                 print("Dijkstra Moving to Next")
                 paths_dijk.append(len(dijk_sol[2]))
                 time_dijk.append(dijk_sol[3])
-               # if dijk_sol[0] == "S":
-                   # successcount_dijk = successcount_dijk + 1
+
 
                 bibfs_sol = al.bibfs(graph, start, end)  # BI-BFS
                 print("BiBFS Moving to Next")
                 paths_bibfs.append(len(bibfs_sol[2]))
                 time_bibfs.append(bibfs_sol[3])
-               # if bibfs_sol[0] == "S":
-                 #   successcount_bibfs = successcount_bibfs + 1
 
                 # I-DFS
-                # yet to create a condition to decide maxDepth for no of nodes keys/divisor
                 idfs_sol = al.callidfs(graph, start, end, 2)
                 print("Iterative DFS Moving to Next")
                 paths_idfs.append(len(idfs_sol[2]))
@@ -110,13 +103,13 @@ def letsfind():
 
             # Dictionary holding size as keys and Means results of each algorithm
             subdict[size] = {
-                "Success Rate": successcount_bfs, "bfs_path": statistics.mean(paths_bfs),
+                "TotalSuccessRate": successcount_bfs, "bfs_path": statistics.mean(paths_bfs),
                 "bfs_time": statistics.mean(time_bfs),
                  "dfs_path": statistics.mean(paths_dfs),
                 "dfs_time": statistics.mean(time_dfs),
                 "dijk_path": statistics.mean(paths_dijk),
                 "dijk_time": statistics.mean(time_dijk),
-                "idfs_success": successcount_idfs, "idfs_path": statistics.mean(paths_idfs),
+                "idfs_path": statistics.mean(paths_idfs),
                 "idfs_time": statistics.mean(time_idfs),
                 "bibfs_path": statistics.mean(paths_bibfs),
                 "bibfs_time": statistics.mean(time_bibfs)}
@@ -125,8 +118,12 @@ def letsfind():
         data[probability] = subdict  # Adding Probability as keys and Values as the subdictionary
         #print("Moving to Next Probability")
     #print(data)  # Printing the main data holding dictionary
+    #for iny in probability_list:
+       # print(iny)
     d = data.get(0.3)
     print(d)
+    Success = list(map(lambda key: (d.get(key)).get("TotalSuccessRate"), d.keys()))
+    print(Success)
 
 
 
