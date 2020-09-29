@@ -189,4 +189,4 @@ def letsfind():
 # ax5.set_ylabel("Time is microseconds")
 # display(mazes)
 
-letsfind()
+# letsfind()
