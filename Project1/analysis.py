@@ -39,15 +39,14 @@ def letsfind():
     endsize = int(input("Enter the max size "))
     step = int(input("Enter the growth size "))
     data = {}  # The main dictionary
-    probability_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]  # Probability list
+    probability_list = [0.1, 0.3, 0.5, 0.7, 0.9]  # Probability list
 
     for probability in probability_list:  # Looping for each probability
         subdict = {}
         for size in range(startsize, endsize + step, step):  # Looping for each size defined
             successcount_bfs = 0
-            successcount_dfs = 0
-            successcount_dijk = 0                                 # Initializations
-            successcount_bibfs = 0
+                                               # Initializations
+
             successcount_idfs = 0
             paths_bfs = []
             paths_dfs = []
@@ -83,22 +82,22 @@ def letsfind():
                 print("DFS  Moving to Next")
                 paths_dfs.append(len(dfs_sol[2]))
                 time_dfs.append(dfs_sol[3])
-                if dfs_sol[0] == "S":
-                    successcount_dfs = successcount_dfs + 1
+                #if dfs_sol[0] == "S":
+                   # successcount_dfs = successcount_dfs + 1
 
                 dijk_sol = al.dijkstra(graph, start, end)  # DIJKSTRA
                 print("Dijkstra Moving to Next")
                 paths_dijk.append(len(dijk_sol[2]))
                 time_dijk.append(dijk_sol[3])
-                if dijk_sol[0] == "S":
-                    successcount_dijk = successcount_dijk + 1
+               # if dijk_sol[0] == "S":
+                   # successcount_dijk = successcount_dijk + 1
 
                 bibfs_sol = al.bibfs(graph, start, end)  # BI-BFS
                 print("BiBFS Moving to Next")
                 paths_bibfs.append(len(bibfs_sol[2]))
                 time_bibfs.append(bibfs_sol[3])
-                if bibfs_sol[0] == "S":
-                    successcount_bibfs = successcount_bibfs + 1
+               # if bibfs_sol[0] == "S":
+                 #   successcount_bibfs = successcount_bibfs + 1
 
                 # I-DFS
                 # yet to create a condition to decide maxDepth for no of nodes keys/divisor
@@ -111,23 +110,32 @@ def letsfind():
 
             # Dictionary holding size as keys and Means results of each algorithm
             subdict[size] = {
-                "bfs_success": successcount_bfs, "bfs_path": statistics.mean(paths_bfs),
+                "Success Rate": successcount_bfs, "bfs_path": statistics.mean(paths_bfs),
                 "bfs_time": statistics.mean(time_bfs),
-                "dfs_success": successcount_dfs, "dfs_path": statistics.mean(paths_dfs),
+                 "dfs_path": statistics.mean(paths_dfs),
                 "dfs_time": statistics.mean(time_dfs),
-                "dijk_success": successcount_dijk, "dijk_path": statistics.mean(paths_dijk),
+                "dijk_path": statistics.mean(paths_dijk),
                 "dijk_time": statistics.mean(time_dijk),
                 "idfs_success": successcount_idfs, "idfs_path": statistics.mean(paths_idfs),
                 "idfs_time": statistics.mean(time_idfs),
-                "bibfs_success": successcount_bibfs, "bibfs_path": statistics.mean(paths_bibfs),
+                "bibfs_path": statistics.mean(paths_bibfs),
                 "bibfs_time": statistics.mean(time_bibfs)}
 
-            print("Moving to Next Size")
+            #print("Moving to Next Size")
         data[probability] = subdict  # Adding Probability as keys and Values as the subdictionary
-        print("Moving to Next Probability")
-    print(data)  # Printing the main data holding dictionary
+        #print("Moving to Next Probability")
+    #print(data)  # Printing the main data holding dictionary
+    d = data.get(0.3)
+    print(d)
 
-# maze_size = list(map(lambda key: (data.get(key)).get("size"), data.keys()))
+
+
+
+#maze_size = list(map(lambda key: (data.get(key)).get("size"), data.keys()))
+
+
+
+
 #  mazes = list(map(lambda key: (data.get(key)).get("maze"), data.keys()))
 #  bfs_time = list(map(lambda key: (data.get(key)).get("bfs_time"), data.keys()))
 #  bfs_path = list(map(lambda key: (data.get(key)).get("bfs_path"), data.keys()))

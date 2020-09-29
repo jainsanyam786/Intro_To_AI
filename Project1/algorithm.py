@@ -78,6 +78,7 @@ def dfs(graph, src, dest):
 # Iterative Depth First Search, Source and Destination with the created graph is passed as arguments
 # 'maxDepth' variable is used to search for the required depth needed and to not waste the extra loops to find the dest
 def callidfs(graph, src, des, size):
+    start_time = t.datetime.now()
     def idfs(gr, s, tar, maxDepth):     # gr is graph, s is source, tar is destionation
         currentnode = s
         if s == tar:
@@ -96,15 +97,18 @@ def callidfs(graph, src, des, size):
                             return True
         return False
 
-    for j in range(5, len(graph.keys())):
-        print(j)
+    for j in range(get_step(size), len(graph.keys()), get_step(size)):
+        #print(j)
         vv = set([])
         path = {}
         sol = idfs(graph, src, des, j)
         if sol:
-            print("success")
-            print(get_path(path, (0, 0), (4, 4)))
-            break
+            print(get_path(path, src, des))
+            timetaken = (t.datetime.now() - start_time).microseconds
+            return ["S", des, get_path(path, src, des), timetaken]
+     # return statement for failure
+    timetaken = (t.datetime.now() - start_time).microseconds
+    return ["F", None, [], timetaken]
 
 
 # Bidirectional Breadth First Search, Source and Destination with the created graph is passed as arguments
@@ -159,10 +163,10 @@ def search(queue, visited, path, graph):
 def dijkstra(graph, src, dest):
     start_time = t.datetime.now()
     dist = {}
-    processed = {}
-    prev = {}
+    processed = {}                  # visited
+    prev = {}                       # parent key
     for v in graph.keys():
-        dist[v] = m.inf
+        dist[v] = m.inf                   # distance mapping
         processed[v] = False
         prev[v] = None
 
@@ -190,6 +194,7 @@ def dijkstra(graph, src, dest):
 
 
 # Needs more explanation
+# dijkstra, c is cost, n is nodes
 def addupdatepqueue(pqueue, n, c):
     for item in pqueue:
         if n in list(item.keys()):

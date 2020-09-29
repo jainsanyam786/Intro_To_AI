@@ -2,7 +2,6 @@ import datetime as t
 import numpy as np
 
 
-# Needs explanation
 # Function creates a maze with a specific probability of blockages.
 def create_maze(size, prob):
     num = [[np.random.choice(np.arange(2), 1, p=[1 - prob, prob]) for i in range(size)] for j in range(size)]
@@ -12,7 +11,6 @@ def create_maze(size, prob):
     return num_arr
 
 
-# Needs explanation
 # Creating graph with maze points
 def create_graph(maze):
     # dictionary for graphs
@@ -20,7 +18,7 @@ def create_graph(maze):
     graph = {}
     for i in range(maze.shape[0]):
         for j in range(maze.shape[1]):
-            if maze[i][j] not in [1, 3]:
+            if maze[i][j] not in [1, 3]:    # 1 is blockage , 3 is fire
                 edges = []
                 # corner
                 if check_corner(i, j, maze):
