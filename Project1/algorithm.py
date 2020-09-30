@@ -101,17 +101,13 @@ def callidfs(graph, src, des, size):
         return False
     try:
         for j in range(get_step(size), len(graph.keys()), get_step(size)):
-            #print(j)
             vv = set([])
             path = {}
             sol = idfs(graph, src, des, j)
-            #print(sol)
-            #print(j)
             if sol:
                 print(get_path(path, src, des))
                 timetaken = (t.datetime.now() - start_time).microseconds
                 return ["S", des, get_path(path, src, des), timetaken]
-         # return statement for failure
 
     except RecursionError:
         print("Error")

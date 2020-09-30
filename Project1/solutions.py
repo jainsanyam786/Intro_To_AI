@@ -58,31 +58,8 @@ def display(m, si):
     ax.grid(color='k', linestyle='-', linewidth=2)
 
 
-vv = set([])
-
-
 # Function helps to sense the fire till required depth
 # Used in Solution 3
-def feelthefire(gr, src, fire, level):          # gr =  graph, src = source, fire = nodes on fire, level = depth
-    currentnode = src
-    print(level)
-    print(currentnode)
-    if currentnode in fire:
-        print(currentnode)
-        return True
-
-    # If reached the maximum depth, stop recursing.
-    elif level <= 0:
-        return False
-    else:
-        if currentnode not in vv:
-            for i in gr[src]:
-                if i not in vv:
-                    vv.add(currentnode)
-                    if feelthefire(gr, i, fire, level - 1):
-                        return True
-    return False
-
 
 # Needs more explanation
 # Solution 1
@@ -168,6 +145,27 @@ def sol2(maze1, size, graph1, src, dest, f1):
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol3(maze1, size, graph1, src, dest, f1):
+
+    def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
+        currentnode = st
+        print(level)
+        print(currentnode)
+        if currentnode in fire:
+            print(currentnode)
+            return True
+
+        # If reached the maximum depth, stop recursing.
+        elif level <= 0:
+            return False
+        else:
+            if currentnode not in ff:
+                for neigh in gr[st]:
+                    if neigh not in ff:
+                        ff.add(currentnode)
+                        if feelthefire(gr, i, fire, level - 1):
+                            return True
+        return False
+
     result3 = al.bibfs(graph1, src, dest)
     print(result3)
     maze1[0][0] = 2                             # explaination
@@ -181,9 +179,11 @@ def sol3(maze1, size, graph1, src, dest, f1):
         while True:
             step = result3[2].pop(0)
             print("Suggest step ->" + str(step))
-            print(feelthefire(graph1, step, nodes_on_fire, 3))
-            if feelthefire(graph1, prevnode, nodes_on_fire, 3):
-                result3 = al.bibfs(mz.create_graph(maze1), step, dest)
+            ff = set([])
+            check = feelthefire(graph1, prevnode, nodes_on_fire, 3)
+            print(check)
+            if check:
+                result3 = al.bibfs(mz.create_graph(maze1), prevnode, dest)
                 print("changed path")
                 if result3[2] is None:
                     print("Death by trap")
