@@ -82,7 +82,8 @@ def dfs(graph, src, dest):
 def callidfs(graph, src, des, size):
 
     start_time = t.datetime.now()
-    def idfs(gr, s, tar, maxDepth):     # gr is graph, s is source, tar is destionation
+
+    def idfs(gr, s, tar, maxDepth):                  # gr is graph, s is source, tar is destination
         currentnode = s
         if currentnode == tar:
             return True
