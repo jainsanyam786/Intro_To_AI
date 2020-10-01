@@ -79,43 +79,43 @@ def dfs(graph, src, dest):
 # FOr large sizes, IDFS won't work
 # Iterative Depth First Search, Source and Destination with the created graph is passed as arguments
 # 'maxDepth' variable is used to search for the required depth needed and to not waste the extra loops to find the dest
-def callidfs(graph, src, des, size):
-
-    start_time = t.datetime.now()
-
-    def idfs(gr, s, tar, maxDepth):                  # gr is graph, s is source, tar is destination
-        currentnode = s
-        if currentnode == tar:
-            return True
-
-        # If reached the maximum depth, stop recursing.
-        elif maxDepth <= 0:
-            return False
-        else:
-            if currentnode not in vv:                     # Recursive call to find the destination till required depth
-                for i in gr[currentnode]:
-                    if i not in vv:
-                        path[i] = currentnode
-                        vv.add(currentnode)
-                        if idfs(gr, i, tar, maxDepth - 1):
-                            return True
-        return False
-    try:
-        for j in range(get_step(size), len(graph.keys()), get_step(size)):
-            vv = set([])
-            path = {}
-            sol = idfs(graph, src, des, j)
-            if sol:
-                print(get_path(path, src, des))
-                timetaken = (t.datetime.now() - start_time).microseconds
-                return ["S", des, get_path(path, src, des), timetaken]
-
-    except RecursionError:
-        print("Error")
-        timetaken = (t.datetime.now() - start_time).microseconds
-        return ["F", None, [], timetaken]
-    timetaken = (t.datetime.now() - start_time).microseconds
-    return ["F", None, [], timetaken]
+# def callidfs(graph, src, des, size):
+#
+#     start_time = t.datetime.now()
+#
+#     def idfs(gr, s, tar, maxDepth):                  # gr is graph, s is source, tar is destination
+#         currentnode = s
+#         if currentnode == tar:
+#             return True
+#
+#         # If reached the maximum depth, stop recursing.
+#         elif maxDepth <= 0:
+#             return False
+#         else:
+#             if currentnode not in vv:                     # Recursive call to find the destination till required depth
+#                 for i in gr[currentnode]:
+#                     if i not in vv:
+#                         path[i] = currentnode
+#                         vv.add(currentnode)
+#                         if idfs(gr, i, tar, maxDepth - 1):
+#                             return True
+#         return False
+#     try:
+#         for j in range(get_step(size), len(graph.keys()), get_step(size)):
+#             vv = set([])
+#             path = {}
+#             sol = idfs(graph, src, des, j)
+#             if sol:
+#                 # print(get_path(path, src, des))
+#                 timetaken = (t.datetime.now() - start_time).microseconds
+#                 return ["S", des, get_path(path, src, des), timetaken]
+#
+#     except RecursionError:
+#         # print("Error")
+#         timetaken = (t.datetime.now() - start_time).microseconds
+#         return ["F", None, [], timetaken]
+#     timetaken = (t.datetime.now() - start_time).microseconds
+#     return ["F", None, [], timetaken]
 
 
 # Bidirectional Breadth First Search, Source and Destination with the created graph is passed as arguments
