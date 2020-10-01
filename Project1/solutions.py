@@ -28,14 +28,14 @@ def spread_fire(graph, onfire, q, a, b):
     for node in graph.keys():
         if node not in loc and node not in [a, b]:
             neighbours = graph.get(node)
-            n_onfire = 0                        # variable to count the nodes on fire
+            n_onfire = 0  # variable to count the nodes on fire
             for n in neighbours:
                 if n in loc:
-                    n_onfire = n_onfire + 1         # Incrementing the count for each node on fire
-            if n_onfire > 0:                          # Spreading fire on the given probability
+                    n_onfire = n_onfire + 1  # Incrementing the count for each node on fire
+            if n_onfire > 0:  # Spreading fire on the given probability
                 prob = 1 - ((1 - q) ** n_onfire)
                 if np.random.choice(np.arange(2), 1, p=[1 - prob, prob])[0] == 1:
-                    onfire.append(node)                # adding the new nodes on fire to the previous fire node list
+                    onfire.append(node)  # adding the new nodes on fire to the previous fire node list
 
 
 # Color code, w = white, k = black, c = cyan, y = yellow, red = red, g = green
@@ -94,13 +94,14 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q):
     display(maze1, size1)
     return True
 
+
 # Needs more explanation
 # Solution 2
 # Agent follows the searched path and changes path by recomputing.
 # Recomputing takes places when any of the given path node is on fire
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
-def sol2(maze2, size2, graph2, src2, dest2, f2,q):
+def sol2(maze2, size2, graph2, src2, dest2, f2, q):
     result2 = al.bibfs(graph2, src2, dest2)
     # print(result2)
     maze2[0][0] = 2
@@ -143,7 +144,6 @@ def sol2(maze2, size2, graph2, src2, dest2, f2,q):
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol3(maze3, size3, graph3, src3, dest3, f3, q):
-
     def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
         currentnode = st
         # print(level)
@@ -166,14 +166,14 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
 
     result3 = al.bibfs(graph3, src3, dest3)
     print(result3)
-    maze3[0][0] = 2                             # explaination
+    maze3[0][0] = 2  # explaination
     maze3[size3 - 1][size3 - 1] = 5
     nodes_on_fire = []
     if result3[0] == "S" and fn is not None:
         maze3[fn[0]][fn[1]] = 3
         nodes_on_fire.append(f3)
         prevnode = src3
-        #result3[2].pop(0)
+        # result3[2].pop(0)
         while True:
             print(prevnode)
             step = result3[2].pop(1)
@@ -208,63 +208,70 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
     display(maze3, size3)
 
 
-s = 5                                    # MaxDepth
-sr = (0, 0)                              # Starting node
-des = (s - 1, s - 1)                     # Destination
-m1 = mz.create_maze(s, 0.2)              # Create maze function
-gr1 = mz.create_graph(m1)                # Then create graph
-# m2 = m1.copy()               # maze
-# gr2 = gr1.copy()               # graph
-m3 = m1.copy()               # maze
-gr3 = gr1.copy()               # graph
-fn = let_there_be_fire(gr1, sr, des)              # initializes fire
-# print("Fire Starts at" + str(fn))
-# print("User Starts at" + str(sr))
-# # Solution 1
-# print("SOL1")
-# sol1(m1, s, gr1, sr, des, fn)            # m1 and gr1 used
-# # Solution 2
-# print("SOL2")
-# sol2(m2, s, gr2, sr, des, fn)            # m2 and gr2 used
-# # Solution 1
-print("SOL3")
-sol3(m3, s, gr3, sr, des, fn, 0.1)            # m3 and gr3 used
-plt.show()
+# s = 5  # MaxDepth
+# sr = (0, 0)  # Starting node
+# des = (s - 1, s - 1)  # Destination
+# m1 = mz.create_maze(s, 0.2)  # Create maze function
+# gr1 = mz.create_graph(m1)  # Then create graph
+# # m2 = m1.copy()               # maze
+# # gr2 = gr1.copy()               # graph
+# m3 = m1.copy()  # maze
+# gr3 = gr1.copy()  # graph
+# fn = let_there_be_fire(gr1, sr, des)  # initializes fire
+# # print("Fire Starts at" + str(fn))
+# # print("User Starts at" + str(sr))
+# # # Solution 1
+# # print("SOL1")
+# # sol1(m1, s, gr1, sr, des, fn)            # m1 and gr1 used
+# # # Solution 2
+# # print("SOL2")
+# # sol2(m2, s, gr2, sr, des, fn)            # m2 and gr2 used
+# # # Solution 1
+# print("SOL3")
+# sol3(m3, s, gr3, sr, des, fn, 0.1)  # m3 and gr3 used
+# plt.show()
 
-# q1 = [0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-# result = {}
-# for q in q1:
-#     m1 = mz.create_maze(s, 0.3)  # Create maze function
-#     gr1 = mz.create_graph(m1)  # Then create graph
-#     m2 = m1.copy()  # maze
-#     gr2 = gr1.copy()  # graph
-#     m3 = m1.copy()  # maze
-#     gr3 = gr1.copy()  # graph
-#     fn = let_there_be_fire(gr1, sr, des)  # initializes fire
-#     print("Fire Starts at" + str(fn))
-#     print("User Starts at" + str(sr))
-#
-#     count1, count2, count3 = 0, 0, 0
-#     counter = 0
-#     if al.bibfs(gr1, sr, des)[0] == 'S' and fn is not None:
-#         while counter < 10:
-#             # Solution 1
-#             f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
-#             if f1:
-#                 count1 += 1
-#             counter += 1
-#             # Solution 2
-#             print("SOL2")
-#             f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
-#             if f2:
-#                 count2 += 1
-#             counter += 1
-#             # Solution 3
-#             print("SOL3")
-#             f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
-#             if f3:
-#                 count3 += 1
-#             counter += 1
-#
-#     result[q] = [count1, count2, count3]
-# print(result)
+
+resultstore = {}
+for y in range(1, 5):
+    q1 = [0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
+    s = 70
+    sr = (0,0)
+    des = (s-1, s-1)
+    result = {}
+    for q in q1:
+        m1 = mz.create_maze(s, 0.3)  # Create maze function
+        gr1 = mz.create_graph(m1)  # Then create graph
+        m2 = m1.copy()  # maze
+        gr2 = gr1.copy()  # graph
+        m3 = m1.copy()  # maze
+        gr3 = gr1.copy()  # graph
+        fn = let_there_be_fire(gr1, sr, des)  # initializes fire
+        print("Fire Starts at" + str(fn))
+        print("User Starts at" + str(sr))
+
+        count1, count2, count3 = 0, 0, 0
+        counter = 0
+        if al.bibfs(gr1, sr, des)[0] == 'S' and fn is not None:
+            while counter < 10:
+                # Solution 1
+                print("SOL1")
+                f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
+                if f1:
+                    count1 += 1
+
+                # Solution 2
+                print("SOL2")
+                f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
+                if f2:
+                    count2 += 1
+                    # Solution 3
+                print("SOL3")
+                f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
+                if f3:
+                    count3 += 1
+                counter += 1
+
+        result[q] = [count1, count2, count3]
+    resultstore[y] = result
+print(resultstore)

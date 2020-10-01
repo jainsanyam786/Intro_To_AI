@@ -41,7 +41,7 @@ def disp_path_for_probab3(data, startsize, endsize, step):
     size_list = []
     for size in range(startsize, endsize + step, step):
         size_list.append(size)
-    algo_list = ["bfs", "dfs", "dijk", "idfs", "bibfs"]
+    algo_list = ["bfs", "dfs", "dijk", "bibfs"]
     for algo in algo_list:
         d = data.get(0.3)
         path = list(map(lambda key: (d.get(key)).get(algo + "_path"), d.keys()))
@@ -59,7 +59,7 @@ def disp_time_for_probab3(data, startsize, endsize, step):
     size_list = []
     for size in range(startsize, endsize + step, step):
         size_list.append(size)
-    algo_list = ["bfs", "dfs", "dijk", "idfs", "bibfs"]
+    algo_list = ["bfs", "dfs", "dijk", "bibfs"]
     for algo in algo_list:
         d = data.get(0.3)
         time = list(map(lambda key: (d.get(key)).get(algo + "_time"), d.keys()))
@@ -145,10 +145,10 @@ def letsfind():
                 paths_bibfs.append(len(bibfs_sol[2]))
                 time_bibfs.append(bibfs_sol[3])
 
-                idfs_sol = al.callidfs(graph, start, end, 2)             # I-DFS
-                print("Iterative DFS Moving to Next")
-                paths_idfs.append(len(idfs_sol[2]))
-                time_idfs.append(idfs_sol[3])
+                # idfs_sol = al.callidfs(graph, start, end, 2)             # I-DFS
+                # print("Iterative DFS Moving to Next")
+                # paths_idfs.append(len(idfs_sol[2]))
+                # time_idfs.append(idfs_sol[3])
 
             # Dictionary holding size as keys and Means results of each algorithm
             subdict[size] = {
@@ -159,8 +159,8 @@ def letsfind():
                 "dfs_time": statistics.mean(time_dfs),
                 "dijk_path": statistics.mean(paths_dijk),
                 "dijk_time": statistics.mean(time_dijk),
-                "idfs_path": statistics.mean(paths_idfs),
-                "idfs_time": statistics.mean(time_idfs),
+                # "idfs_path": statistics.mean(paths_idfs),
+                # "idfs_time": statistics.mean(time_idfs),
                 "bibfs_path": statistics.mean(paths_bibfs),
                 "bibfs_time": statistics.mean(time_bibfs)}
 
