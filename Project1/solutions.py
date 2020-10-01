@@ -13,9 +13,8 @@ def let_there_be_fire(graph, src, dest):
     # Extract the keys (nodes) of the graph
     graph_keys = list(graph.keys())
     length = len(graph_keys)
-    for i in range(length):
-        # Generate a random number from 0 to length-1
-        num = np.random.choice(np.arange(length), 1, replace=False)[0]
+    indexlist = np.random.choice(np.arange(length), length, replace=False)
+    for num in indexlist:
         if num != 0 and num != length - 1 and al.dfs(graph, src, graph_keys[num])[0] == 'S' and num is not None:
             firenode = graph_keys[num]
             return firenode
