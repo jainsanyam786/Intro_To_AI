@@ -75,8 +75,7 @@ def dfs(graph, src, dest):
     return ["F", None, [], timetaken]
 
 
-# Needs more explanation
-# FOr large sizes, IDFS won't work
+# Iterative DFS is not computing for large maes so we have dropped
 # Iterative Depth First Search, Source and Destination with the created graph is passed as arguments
 # 'maxDepth' variable is used to search for the required depth needed and to not waste the extra loops to find the dest
 # def callidfs(graph, src, des, size):
@@ -120,6 +119,11 @@ def dfs(graph, src, dest):
 
 # Bidirectional Breadth First Search, Source and Destination with the created graph is passed as arguments
 # 2 queues are used to travel from source and destination and to find the common link in between
+
+
+# Bidirectional BFS
+# Mainting 2 queues, 1 for start point path and another for end point path
+# timetaken is registered
 def bibfs(graph, src, dest):
     start_time = t.datetime.now()
     # keep track of visited nodes
@@ -165,8 +169,9 @@ def search(queue, visited, path, graph):
         visited.append(node)
 
 
-# Needs more explanation
-# Dijkastra,
+# Dijkastra
+# processed variable is used as visited nodes and prev variable us used to store the parent key
+# distance mapping is initialized to zero and priority queue is maintained
 def dijkstra(graph, src, dest):
     start_time = t.datetime.now()
     dist = {}
@@ -181,6 +186,7 @@ def dijkstra(graph, src, dest):
     pqueue = [{src: dist[src]}]
     prev[src] = src
 
+# popping out elements from priority queue as First out
     while pqueue:
         node = pqueue.pop(0)
         v = list(node.keys())[0]
@@ -200,7 +206,6 @@ def dijkstra(graph, src, dest):
         return "S", dest, path, timetaken
 
 
-# Needs more explanation
 # dijkstra, c is cost, n is nodes
 def addupdatepqueue(pqueue, n, c):
     for item in pqueue:
