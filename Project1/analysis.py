@@ -2,34 +2,37 @@ import statistics
 import createmaze as mz
 import algorithm as al
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import matplotlib.cm as cm
 import numpy as np
-import pandas as p
 
 
 # This function helps to display the maze.
 # matplotlib library is imported and to generate a figure.
-# gridspec helps to create axis and grid layout
-# COnfigured the maze with required specifications
-def display(items):
+# Configured the maze with required specifications
+def display(item, size, prob):
     fig = plt.figure()
-    print(len(items))
-    gs = gridspec.GridSpec(2, len(items) // 2)
-    item = enumerate(items)
-    for ss in gs:
-        m = next(item)[1]
-        size = m.shape[0]
-        ax = fig.add_subplot(ss)
-        ax.matshow(m, cmap=cm.binary)
-        ax.set_title("Maze with size " + str(size))
-        ax.set_xticks(np.arange(-0.5, size, 1))
-        ax.set_yticks(np.arange(-0.5, size, 1))
-        ax.set_xticklabels(np.arange(0, size + 1, 1), rotation=90, horizontalalignment="right")
-        ax.set_yticklabels(np.arange(0, size + 1, 1), horizontalalignment="right")
-        ax.grid(color='k', linestyle='-', linewidth=2)
-    gs.tight_layout(fig, rect=[0, 0, 1, 1])
-    plt.show()  # To show the Graph
+    ax = fig.add_subplot()
+    ax.matshow(item, cmap=cm.binary)
+    ax.set_title("Maze with size " + str(size) + " and probability of " + str(prob))
+    ax.set_xticks(np.arange(-0.5, size, 1))
+    ax.set_yticks(np.arange(-0.5, size, 1))
+    ax.set_xticklabels(np.arange(0, size + 1, 1), rotation=90, horizontalalignment="right")
+    ax.set_yticklabels(np.arange(0, size + 1, 1), horizontalalignment="right")
+    ax.grid(color='k', linestyle='-', linewidth=2)
+
+
+def generate_sample():
+    prob_list = [0.1, 0.3, 0.5]
+    startsize = int(input("Enter the Start size "))
+    endsize = int(input("Enter the End size "))
+    step = int(input("Enter the growth size "))
+
+    for size in range(startsize, endsize + step, step):
+        for prob in prob_list:
+            print("Sample mazes of " + str(size) + " with " + str(prob) + " will be generated")
+            for x in range(0, 2):  # 2 Iterations and mean results
+                maze = mz.create_maze(size, prob)
+                display(maze, size, prob)
 
 
 # Size vs Path  specific for probability of 0.3
@@ -89,6 +92,8 @@ def disp_stats_for_probab(data, startsize, endsize, step, probability_list):
     ax1.grid(True)
 
 
+
+
 # Generating dictionary with probability from 0.1 to 0.9 and value holds another dictionary with keys as size and
 # value as success count, total cost and time taken for 10 iterations of each search algorithm.
 def letsfind():
@@ -96,8 +101,7 @@ def letsfind():
     endsize = int(input("Enter the max size "))
     step = int(input("Enter the growth size "))
     data = {}                                                           # The main dictionary
-    probability_list = [0.1, 0.3, 0.4, 0.5, 0.7, 0.9]                   # Probability list
-
+    probability_list = [0.1, 0.3, 0.5, 0.7, ]                   # Probability list
     for probability in probability_list:                                # Looping for each probability
         subdict = {}
         for size in range(startsize, endsize + step, step):             # Looping for each size defined
@@ -105,15 +109,13 @@ def letsfind():
             paths_bfs = []
             paths_dfs = []
             paths_dijk = []
-            paths_idfs = []
             paths_bibfs = []
             time_bfs = []
             time_dfs = []
             time_dijk = []
-            time_idfs = []
             time_bibfs = []
 
-            for x in range(0, 10):                                       # 10 Iterations and mean results
+            for x in range(0, 2):                                       # 10 Iterations and mean results
                 maze = mz.create_maze(size, probability)
                 print("Maze Moving to Next")
 
@@ -145,11 +147,6 @@ def letsfind():
                 paths_bibfs.append(len(bibfs_sol[2]))
                 time_bibfs.append(bibfs_sol[3])
 
-                # idfs_sol = al.callidfs(graph, start, end, 2)             # I-DFS
-                # print("Iterative DFS Moving to Next")
-                # paths_idfs.append(len(idfs_sol[2]))
-                # time_idfs.append(idfs_sol[3])
-
             # Dictionary holding size as keys and Means results of each algorithm
             subdict[size] = {
                 "TotalSuccessRate": successcount,
@@ -159,8 +156,6 @@ def letsfind():
                 "dfs_time": statistics.mean(time_dfs),
                 "dijk_path": statistics.mean(paths_dijk),
                 "dijk_time": statistics.mean(time_dijk),
-                # "idfs_path": statistics.mean(paths_idfs),
-                # "idfs_time": statistics.mean(time_idfs),
                 "bibfs_path": statistics.mean(paths_bibfs),
                 "bibfs_time": statistics.mean(time_bibfs)}
 
@@ -169,8 +164,14 @@ def letsfind():
     disp_stats_for_probab(data, startsize, endsize, step, probability_list)           # success rate vs size
     disp_time_for_probab3(data, startsize, endsize, step)                             # time vs size
     disp_path_for_probab3(data, startsize, endsize, step)                             # Path vs size
-    plt.show()                                                                        # Graph Output
 
 
 # Function calling for Analysis results
-# letsfind()
+letsfind()
+
+# Two sample maze of given size and probability
+generate_sample()
+
+# To show the figures
+plt.show()
+
