@@ -90,7 +90,7 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q):
             return False
     for i in nodes_on_fire:
         maze1[i[0]][i[1]] = 3
-    display(maze1, size1)
+    #display(maze1, size1)
     return True
 
 
@@ -132,7 +132,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
             nodes_on_fire.remove(step)
             return False
 
-    display(maze2, size2)
+   # display(maze2, size2)
 
 
 # Needs more explanation
@@ -164,7 +164,7 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
         return False
 
     result3 = al.bibfs(graph3, src3, dest3)
-    print(result3)
+    #print(result3)
     maze3[0][0] = 2  # explaination
     maze3[size3 - 1][size3 - 1] = 5
     nodes_on_fire = []
@@ -174,23 +174,23 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
         prevnode = src3
         # result3[2].pop(0)
         while True:
-            print(prevnode)
+           # print(prevnode)
             step = result3[2].pop(1)
-            print("Suggest step ->" + str(step))
+           # print("Suggest step ->" + str(step))
             if step == dest3:
-                print("Success")
+              #  print("Success")
                 return True
             ff = set([])
             check = feelthefire(graph3, prevnode, nodes_on_fire, 3)
-            print(check)
+           # print(check)
             if check:
                 result3 = al.bibfs(mz.create_graph(maze3), prevnode, dest3)
-                print("changed path")
-                print(result3)
+                #print("changed path")
+               # print(result3)
                 if not result3[2]:
-                    print("Death by trap")
+                   # print("Death by trap")
                     return False
-                print(result3[2])
+               # print(result3[2])
                 step = result3[2].pop(1)
             prevnode = step
             # print("Step Taken---->" + str(step))
@@ -200,11 +200,11 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
                 maze3[i[0]][i[1]] = 3
             # print("nodes on fire --->" + str(nodes_on_fire))
             if step in nodes_on_fire:
-                print("Death by fire")
+               # print("Death by fire")
                 maze3[step[0]][step[1]] = 4
                 nodes_on_fire.remove(step)
                 return False
-    display(maze3, size3)
+    #display(maze3, size3)
 
 
 # s = 5  # MaxDepth
@@ -231,46 +231,50 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
 # plt.show()
 
 
-# resultstore = {}
-# for y in range(1, 5):
-#     q1 = [0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-#     s = 70
-#     sr = (0,0)
-#     des = (s-1, s-1)
-#     result = {}
-#     for q in q1:
-#         m1 = mz.create_maze(s, 0.3)  # Create maze function
-#         gr1 = mz.create_graph(m1)  # Then create graph
-#         m2 = m1.copy()  # maze
-#         gr2 = gr1.copy()  # graph
-#         m3 = m1.copy()  # maze
-#         gr3 = gr1.copy()  # graph
-#         fn = let_there_be_fire(gr1, sr, des)  # initializes fire
-#         print("Fire Starts at" + str(fn))
-#         print("User Starts at" + str(sr))
-#
-#         count1, count2, count3 = 0, 0, 0
-#         counter = 0
-#         if al.bibfs(gr1, sr, des)[0] == 'S' and fn is not None:
-#             while counter < 10:
-#                 # Solution 1
-#                 print("SOL1")
-#                 f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
-#                 if f1:
-#                     count1 += 1
-#
-#                 # Solution 2
-#                 print("SOL2")
-#                 f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
-#                 if f2:
-#                     count2 += 1
-#                     # Solution 3
-#                 print("SOL3")
-#                 f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
-#                 if f3:
-#                     count3 += 1
-#                 counter += 1
-#
-#         result[q] = [count1, count2, count3]
-#     resultstore[y] = result
-# print(resultstore)
+resultstore = {}
+for y in range(0, 2):
+    print(y)
+    q1 = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
+    s = 70
+    sr = (0, 0)
+    des = (s-1, s-1)
+    result = {}
+    for q in q1:
+        print(q)
+        ## print("User Starts at" + str(sr))
+        count1, count2, count3 = 0, 0, 0
+        counter = 0
+
+        while counter < 10:
+            m1 = mz.create_maze(s, 0.3)  # Create maze function
+            gr1 = mz.create_graph(m1)  # Then create graph
+            m2 = m1.copy()  # maze
+            gr2 = gr1.copy()  # graph
+            m3 = m1.copy()  # maze
+            gr3 = gr1.copy()  # graph
+            fn = let_there_be_fire(gr1, sr, des)  # initializes fire
+            print("fn:")
+            print(fn)
+            if al.bibfs(gr1, sr, des)[0] == 'S' and fn is not None:
+                print(counter)
+                # Solution 1
+                print("SOL1")
+                f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
+                if f1:
+                    count1 += 1
+
+                # Solution 2
+                print("SOL2")
+                f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
+                if f2:
+                    count2 += 1
+                    # Solution 3
+                print("SOL3")
+                f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
+                if f3:
+                    count3 += 1
+                counter += 1
+
+        result[q] = [count1, count2, count3]
+    resultstore[y] = result
+print(resultstore)
