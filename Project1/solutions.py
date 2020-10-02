@@ -231,46 +231,46 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
 # plt.show()
 
 
-resultstore = {}
-for y in range(1, 5):
-    q1 = [0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-    s = 70
-    sr = (0,0)
-    des = (s-1, s-1)
-    result = {}
-    for q in q1:
-        m1 = mz.create_maze(s, 0.3)  # Create maze function
-        gr1 = mz.create_graph(m1)  # Then create graph
-        m2 = m1.copy()  # maze
-        gr2 = gr1.copy()  # graph
-        m3 = m1.copy()  # maze
-        gr3 = gr1.copy()  # graph
-        fn = let_there_be_fire(gr1, sr, des)  # initializes fire
-        print("Fire Starts at" + str(fn))
-        print("User Starts at" + str(sr))
-
-        count1, count2, count3 = 0, 0, 0
-        counter = 0
-        if al.bibfs(gr1, sr, des)[0] == 'S' and fn is not None:
-            while counter < 10:
-                # Solution 1
-                print("SOL1")
-                f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
-                if f1:
-                    count1 += 1
-
-                # Solution 2
-                print("SOL2")
-                f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
-                if f2:
-                    count2 += 1
-                    # Solution 3
-                print("SOL3")
-                f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
-                if f3:
-                    count3 += 1
-                counter += 1
-
-        result[q] = [count1, count2, count3]
-    resultstore[y] = result
-print(resultstore)
+# resultstore = {}
+# for y in range(1, 5):
+#     q1 = [0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
+#     s = 70
+#     sr = (0,0)
+#     des = (s-1, s-1)
+#     result = {}
+#     for q in q1:
+#         m1 = mz.create_maze(s, 0.3)  # Create maze function
+#         gr1 = mz.create_graph(m1)  # Then create graph
+#         m2 = m1.copy()  # maze
+#         gr2 = gr1.copy()  # graph
+#         m3 = m1.copy()  # maze
+#         gr3 = gr1.copy()  # graph
+#         fn = let_there_be_fire(gr1, sr, des)  # initializes fire
+#         print("Fire Starts at" + str(fn))
+#         print("User Starts at" + str(sr))
+#
+#         count1, count2, count3 = 0, 0, 0
+#         counter = 0
+#         if al.bibfs(gr1, sr, des)[0] == 'S' and fn is not None:
+#             while counter < 10:
+#                 # Solution 1
+#                 print("SOL1")
+#                 f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
+#                 if f1:
+#                     count1 += 1
+#
+#                 # Solution 2
+#                 print("SOL2")
+#                 f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
+#                 if f2:
+#                     count2 += 1
+#                     # Solution 3
+#                 print("SOL3")
+#                 f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
+#                 if f3:
+#                     count3 += 1
+#                 counter += 1
+#
+#         result[q] = [count1, count2, count3]
+#     resultstore[y] = result
+# print(resultstore)
