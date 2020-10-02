@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import colors
 from matplotlib.colors import ListedColormap
 
+import datetime as t
 import algorithm as al
 import createmaze as mz
 
@@ -66,6 +67,7 @@ def display(m, si):
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol1(maze1, size1, graph1, src1, dest1, f1, q):
+    start1 = t.datetime.now()
     # print(graph1)
     result1 = al.bibfs(graph1, src1, dest1)
     #print(result1)
@@ -87,11 +89,11 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q):
             # print("Death by fire")
             maze1[step1[0]][step1[1]] = 4
             nodes_on_fire.remove(step1)
-            return False
+            return False, 0
     for i in nodes_on_fire:
         maze1[i[0]][i[1]] = 3
     #display(maze1, size1)
-    return True
+    return True, (t.datetime.now() - start1).microseconds
 
 
 # Needs more explanation
@@ -101,6 +103,7 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q):
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol2(maze2, size2, graph2, src2, dest2, f2, q):
+    start2 = t.datetime.now()
     result2 = al.bibfs(graph2, src2, dest2)
     # print(result2)
     maze2[0][0] = 2
@@ -114,14 +117,14 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
         result2 = al.bibfs(mz.create_graph(maze2), step, dest2)
         if not result2[2]:
             # print("Death by trap")
-            return False
+            return False, 0
         # print(result2[2])
         step = result2[2].pop(1)
         # print(step)
         maze2[step[0]][step[1]] = 2
         if step == dest2:
             # print("Success")
-            return True
+            return True, (t.datetime.now() - start2).microseconds
         spread_fire(graph2, nodes_on_fire, q, src2, dest2)
         for i in nodes_on_fire:
             maze2[i[0]][i[1]] = 3
@@ -130,7 +133,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
             # print("Death by fire")
             maze2[step[0]][step[1]] = 4
             nodes_on_fire.remove(step)
-            return False
+            return False, 0
 
    # display(maze2, size2)
 
@@ -143,6 +146,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol3(maze3, size3, graph3, src3, dest3, f3, q):
+    start3 = t.datetime.now()
     def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
         currentnode = st
         # print(level)
@@ -179,7 +183,7 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
            # print("Suggest step ->" + str(step))
             if step == dest3:
               #  print("Success")
-                return True
+                return True, (t.datetime.now() - start3).microseconds
             ff = set([])
             check = feelthefire(graph3, prevnode, nodes_on_fire, 3)
            # print(check)
@@ -189,7 +193,7 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
                # print(result3)
                 if not result3[2]:
                    # print("Death by trap")
-                    return False
+                    return False, 0
                # print(result3[2])
                 step = result3[2].pop(1)
             prevnode = step
@@ -203,7 +207,7 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
                # print("Death by fire")
                 maze3[step[0]][step[1]] = 4
                 nodes_on_fire.remove(step)
-                return False
+                return False, 0
     #display(maze3, size3)
 
 
@@ -235,14 +239,14 @@ resultstore = {}
 for y in range(0, 2):
     print(y)
     q1 = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-    s = 70
+    s = 30
     sr = (0, 0)
     des = (s-1, s-1)
     result = {}
     for q in q1:
         print(q)
         ## print("User Starts at" + str(sr))
-        count1, count2, count3 = 0, 0, 0
+        count1, count2, count3, t1, t2, t3 = 0, 0, 0, [], [], []
         counter = 0
 
         while counter < 10:
@@ -260,21 +264,27 @@ for y in range(0, 2):
                 # Solution 1
                 print("SOL1")
                 f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
-                if f1:
+                if f1[0]:
                     count1 += 1
+                    t1.append(f1[1])
+                # print(t1)
 
                 # Solution 2
                 print("SOL2")
                 f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
-                if f2:
+                if f2[0]:
                     count2 += 1
+                    t2.append(f2[1])
+                # print(t2)
                     # Solution 3
                 print("SOL3")
                 f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
-                if f3:
+                if f3[0]:
                     count3 += 1
+                    t3.append(f3[1])
+                # print(t3)
                 counter += 1
 
-        result[q] = [count1, count2, count3]
+        result[q] = [count1, np.average(t1), count2, np.average(t2), count3, np.average(t3)]
     resultstore[y] = result
 print(resultstore)
