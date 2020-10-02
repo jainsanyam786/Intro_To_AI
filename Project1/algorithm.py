@@ -1,6 +1,5 @@
 import datetime as t
 import math as m
-import createmaze as cm
 
 
 # These algorithms are used to find the shortest path for the agent to reach till destination hopefully
@@ -78,43 +77,43 @@ def dfs(graph, src, dest):
 # Iterative DFS is not computing for large maes so we have dropped
 # Iterative Depth First Search, Source and Destination with the created graph is passed as arguments
 # 'maxDepth' variable is used to search for the required depth needed and to not waste the extra loops to find the dest
-# def callidfs(graph, src, des, size):
-#
-#     start_time = t.datetime.now()
-#
-#     def idfs(gr, s, tar, maxDepth):                  # gr is graph, s is source, tar is destination
-#         currentnode = s
-#         if currentnode == tar:
-#             return True
-#
-#         # If reached the maximum depth, stop recursing.
-#         elif maxDepth <= 0:
-#             return False
-#         else:
-#             if currentnode not in vv:                     # Recursive call to find the destination till required depth
-#                 for i in gr[currentnode]:
-#                     if i not in vv:
-#                         path[i] = currentnode
-#                         vv.add(currentnode)
-#                         if idfs(gr, i, tar, maxDepth - 1):
-#                             return True
-#         return False
-#     try:
-#         for j in range(get_step(size), len(graph.keys()), get_step(size)):
-#             vv = set([])
-#             path = {}
-#             sol = idfs(graph, src, des, j)
-#             if sol:
-#                 # print(get_path(path, src, des))
-#                 timetaken = (t.datetime.now() - start_time).microseconds
-#                 return ["S", des, get_path(path, src, des), timetaken]
-#
-#     except RecursionError:
-#         # print("Error")
-#         timetaken = (t.datetime.now() - start_time).microseconds
-#         return ["F", None, [], timetaken]
-#     timetaken = (t.datetime.now() - start_time).microseconds
-#     return ["F", None, [], timetaken]
+def callidfs(graph, src, des):
+
+    start_time = t.datetime.now()
+
+    def idfs(gr, s, tar, maxDepth):                  # gr is graph, s is source, tar is destination
+        currentnode = s
+        if currentnode == tar:
+            return True
+
+        # If reached the maximum depth, stop recursing.
+        elif maxDepth <= 0:
+            return False
+        else:
+            if currentnode not in vv:                     # Recursive call to find the destination till required depth
+                for i in gr[currentnode]:
+                    if i not in vv:
+                        path[i] = currentnode
+                        vv.add(currentnode)
+                        if idfs(gr, i, tar, maxDepth - 1):
+                            return True
+        return False
+    try:
+        for j in range(get_step(len(graph.keys())), len(graph.keys()), get_step(len(graph.keys()))):
+            vv = set([])
+            path = {}
+            sol = idfs(graph, src, des, j)
+            if sol:
+                # print(get_path(path, src, des))
+                timetaken = (t.datetime.now() - start_time).microseconds
+                return ["S", des, get_path(path, src, des), timetaken]
+
+    except RecursionError:
+        # print("Error")
+        timetaken = (t.datetime.now() - start_time).microseconds
+        return ["F", None, [], timetaken]
+    timetaken = (t.datetime.now() - start_time).microseconds
+    return ["F", None, [], timetaken]
 
 
 # Bidirectional Breadth First Search, Source and Destination with the created graph is passed as arguments
@@ -217,30 +216,37 @@ def addupdatepqueue(pqueue, n, c):
 
 # Function to find the path until the parent is source
 def get_path(path, src, dest):
+    # pathtaken hold the path that will be created
+    # It is created in reverse order thus started with destination
     pathtaken = [dest]
+    # Child denoted the key in input variable path, it is to dest as we will starting with dest
     child = dest
+    # parent denoted the value in input variable path, it is just initialise to dest
     parent = dest
+    # we will keep extraxting untill we get src as parent
     while parent != src:
         parent = path.get(child)
         if parent is None:
             return None
         pathtaken.append(parent)
         child = parent
+    # path will be reversed and returned
     pathtaken.reverse()
     return pathtaken
 
 
-# Function to select a particular size for maxDepth as the maze size increases
-def get_step(size):
-    if size <= 10:                   # 10 is maze size
+# Function to select a particular size for iterative maxDepth as the maze size increases
+# keys represent the number of keys in the maze
+def get_step(keys):
+    if keys <= 10:
         return 2
-    elif 10 < size <= 30:
+    elif 10 < keys <= 30:
         return 5
-    elif 30 < size <= 50:
+    elif 30 < keys <= 50:
         return 10
-    elif 50 < size <= 70:
+    elif 50 < keys <= 70:
         return 15
-    elif 70 < size <= 100:
+    elif 70 < keys <= 100:
         return 20
     else:
         return 25

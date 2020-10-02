@@ -22,8 +22,9 @@ def let_there_be_fire(graph, src, dest):
 
 
 # Function to spread the fire in the maze with specified probability
-# 'q' is probability, 'a' is source, 'b' is destination, 'onfire' is nodes on fire
-def spread_fire(graph, onfire, q, a, b):
+# 'flamability' is probability, 'a' is source and 'b' is destination thses, 'onfire' is nodes on fire
+# 'a' and 'b' are added to avoid fire at src and destination
+def spread_fire(graph, onfire, flamability, a, b):
     loc = onfire.copy()
     for node in graph.keys():
         if node not in loc and node not in [a, b]:
@@ -33,7 +34,7 @@ def spread_fire(graph, onfire, q, a, b):
                 if n in loc:
                     n_onfire = n_onfire + 1  # Incrementing the count for each node on fire
             if n_onfire > 0:  # Spreading fire on the given probability
-                prob = 1 - ((1 - q) ** n_onfire)
+                prob = 1 - ((1 - flamability) ** n_onfire)
                 if np.random.choice(np.arange(2), 1, p=[1 - prob, prob])[0] == 1:
                     onfire.append(node)  # adding the new nodes on fire to the previous fire node list
 
@@ -61,7 +62,7 @@ def display(m, si):
 # Function helps to sense the fire till required depth
 # Used in Solution 3
 
-# Needs more explanation
+# foolhardy
 # Solution 1
 # Agent follows the searched path without changing or recomputing it.
 # 'f1' is the starting point of fire
@@ -75,7 +76,7 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q):
     maze1[size1 - 1][size1 - 1] = 5
     nodes_on_fire = []
     # if result1[0] == "S" and fn is not None:
-    maze1[fn[0]][fn[1]] = 3
+    maze1[fireStart[0]][fireStart[1]] = 3
     nodes_on_fire.append(f1)
     # print(result1[2][0])
     result1[2].pop(0)
@@ -92,11 +93,11 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q):
             return False, 0
     for i in nodes_on_fire:
         maze1[i[0]][i[1]] = 3
-    #display(maze1, size1)
+    # display(maze1, size1)
     return True, (t.datetime.now() - start1).microseconds
 
 
-# Needs more explanation
+# intelligent but cheater
 # Solution 2
 # Agent follows the searched path and changes path by recomputing.
 # Recomputing takes places when any of the given path node is on fire
@@ -110,7 +111,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
     maze2[size2 - 1][size2 - 1] = 5
     nodes_on_fire = []
     # if result2[0] == "S" and fn is not None:
-    maze2[fn[0]][fn[1]] = 3
+    maze2[fireStart[0]][fireStart[1]] = 3
     nodes_on_fire.append(f2)
     step = src2
     while True:
@@ -135,10 +136,11 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
             nodes_on_fire.remove(step)
             return False, 0
 
-   # display(maze2, size2)
+
+# display(maze2, size2)
 
 
-# Needs more explanation
+# realistically intelligent
 # Solution 3
 # Agent follows the searched path and senses the neighbors for fire of every node of the path to take each step
 # If the neighbor of the shortest path nodes are or fire or the path nodes are on fire it recomputes a
@@ -147,6 +149,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol3(maze3, size3, graph3, src3, dest3, f3, q):
     start3 = t.datetime.now()
+
     def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
         currentnode = st
         # print(level)
@@ -168,33 +171,33 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
         return False
 
     result3 = al.bibfs(graph3, src3, dest3)
-    #print(result3)
+    # print(result3)
     maze3[0][0] = 2  # explaination
     maze3[size3 - 1][size3 - 1] = 5
     nodes_on_fire = []
-    if result3[0] == "S" and fn is not None:
-        maze3[fn[0]][fn[1]] = 3
+    if result3[0] == "S" and fireStart is not None:
+        maze3[fireStart[0]][fireStart[1]] = 3
         nodes_on_fire.append(f3)
         prevnode = src3
         # result3[2].pop(0)
         while True:
-           # print(prevnode)
+            # print(prevnode)
             step = result3[2].pop(1)
-           # print("Suggest step ->" + str(step))
+            # print("Suggest step ->" + str(step))
             if step == dest3:
-              #  print("Success")
+                #  print("Success")
                 return True, (t.datetime.now() - start3).microseconds
             ff = set([])
             check = feelthefire(graph3, prevnode, nodes_on_fire, 3)
-           # print(check)
+            # print(check)
             if check:
                 result3 = al.bibfs(mz.create_graph(maze3), prevnode, dest3)
-                #print("changed path")
-               # print(result3)
+                # print("changed path")
+                # print(result3)
                 if not result3[2]:
-                   # print("Death by trap")
+                    # print("Death by trap")
                     return False, 0
-               # print(result3[2])
+                # print(result3[2])
                 step = result3[2].pop(1)
             prevnode = step
             # print("Step Taken---->" + str(step))
@@ -204,11 +207,11 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
                 maze3[i[0]][i[1]] = 3
             # print("nodes on fire --->" + str(nodes_on_fire))
             if step in nodes_on_fire:
-               # print("Death by fire")
+                # print("Death by fire")
                 maze3[step[0]][step[1]] = 4
                 nodes_on_fire.remove(step)
                 return False, 0
-    #display(maze3, size3)
+    # display(maze3, size3)
 
 
 # s = 5  # MaxDepth
@@ -236,17 +239,17 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
 
 
 resultstore = {}
-for y in range(0, 2):
-    print(y)
-    q1 = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
+for inter in range(0, 2):
+    print(inter)
+    flamabilityList = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
     s = 30
     sr = (0, 0)
-    des = (s-1, s-1)
+    des = (s - 1, s - 1)
     result = {}
-    for q in q1:
+    for q in flamabilityList:
         print(q)
-        ## print("User Starts at" + str(sr))
-        count1, count2, count3, t1, t2, t3 = 0, 0, 0, [], [], []
+        successcount1, successcount2, successcount3 = 0, 0, 0
+        timetakenS1, timetakenS2, timetakenS3 = [], [], []
         counter = 0
 
         while counter < 10:
@@ -256,35 +259,35 @@ for y in range(0, 2):
             gr2 = gr1.copy()  # graph
             m3 = m1.copy()  # maze
             gr3 = gr1.copy()  # graph
-            fn = let_there_be_fire(gr1, sr, des)  # initializes fire
-            print("fn:")
-            print(fn)
-            if al.bibfs(gr1, sr, des)[0] == 'S' and fn is not None:
+            fireStart = let_there_be_fire(gr1, sr, des)  # initializes fire
+            print("fireStart: " + str(fireStart))
+            if al.bibfs(gr1, sr, des)[0] == 'S' and fireStart is not None:
                 print(counter)
                 # Solution 1
                 print("SOL1")
-                f1 = sol1(m1, s, gr1, sr, des, fn, q)  # m1 and gr1 used
-                if f1[0]:
-                    count1 += 1
-                    t1.append(f1[1])
+                result1 = sol1(m1, s, gr1, sr, des, fireStart, q)  # m1 and gr1 used
+                if result1[0]:
+                    successcount1 += 1
+                    timetakenS1.append(result1[1])
                 # print(t1)
 
                 # Solution 2
                 print("SOL2")
-                f2 = sol2(m2, s, gr2, sr, des, fn, q)  # m2 and gr2 used
-                if f2[0]:
-                    count2 += 1
-                    t2.append(f2[1])
+                result2 = sol2(m2, s, gr2, sr, des, fireStart, q)  # m2 and gr2 used
+                if result2[0]:
+                    successcount2 += 1
+                    timetakenS2.append(result2[1])
                 # print(t2)
-                    # Solution 3
+                # Solution 3
                 print("SOL3")
-                f3 = sol3(m3, s, gr3, sr, des, fn, q)  # m3 and gr3 used
-                if f3[0]:
-                    count3 += 1
-                    t3.append(f3[1])
+                result3 = sol3(m3, s, gr3, sr, des, fireStart, q)  # m3 and gr3 used
+                if result3[0]:
+                    successcount3 += 1
+                    timetakenS3.append(result3[1])
                 # print(t3)
                 counter += 1
 
-        result[q] = [count1, np.average(t1), count2, np.average(t2), count3, np.average(t3)]
-    resultstore[y] = result
+        result[q] = {successcount1, np.average(timetakenS1), successcount2, np.average(timetakenS2),
+                     successcount3, np.average(timetakenS3)}
+    resultstore[inter] = result
 print(resultstore)

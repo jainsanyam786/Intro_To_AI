@@ -3,6 +3,7 @@ import datetime as t
 import numpy as np
 import createmaze as mz
 import matplotlib.pyplot as plt
+import algorithm as al
 import analysis as an
 
 
@@ -42,6 +43,11 @@ def manhattan(start, end):
     return val
 
 
+def euclidean(start, end):
+    val = m.sqrt(((start[0] - end[0])**2) + ((start[1] - end[1])**2))
+    return val
+
+
 def astar(graph, src, dest):
     start_time = t.datetime.now()
     nodequeue = PriorityQueue()
@@ -75,36 +81,37 @@ def astar(graph, src, dest):
     return "F", None, [], timetaken, nodes_expended, 0
 
 
-def astarthinning(thinnedgraph, graph, src, dest):
-    start_time = t.datetime.now()
-    nodequeue = PriorityQueue()
-    nodequeue.add(src, 0)
-    processedwithcost = {}
-    path = {src: src}
-    processedwithcost[src] = 0
-    nodes_expended = 0
-    while not nodequeue.isempty():
-        nodes_expended += 1
-        currentnode = nodequeue.popmin()
+def astarthinning(thinnedgraph, graph, src1, dest1):
+    start_time1 = t.datetime.now()
+    nodequeue1 = PriorityQueue()
+    nodequeue1.add(src1, 0)
+    processedwithcost1 = {}
+    path1 = {src1: src1}
+    processedwithcost1[src1] = 0
+    nodes_expended1 = 0
+    while not nodequeue1.isempty():
+        nodes_expended1 += 1
+        currentnode1 = nodequeue1.popmin()
         # print("Current node ----> " + str(currentnode))
-        if currentnode == dest:
-            timetaken = (t.datetime.now() - start_time).microseconds
-            return "S", currentnode, get_path(path, src, dest), timetaken, nodes_expended
+        if currentnode1 == dest1:
+            timetaken1 = (t.datetime.now() - start_time1).microseconds
+            return "S", currentnode1, get_path(path1, src1, dest1), timetaken1, nodes_expended1
         # fetch the neighbour of current node
-        for neigh in graph.get(currentnode):
-            newcost = processedwithcost[currentnode] + 1  # Travellingcost
+        for neigh1 in graph.get(currentnode1):
+            newcost1 = processedwithcost1[currentnode1] + 1  # Travellingcost
             # print("Current cost ----> " + str(newcost))
             # check if neighbour already there or current cost for neighbour is less then present cost
-            if neigh not in processedwithcost or newcost < processedwithcost[neigh]:
+            if neigh1 not in processedwithcost1 or newcost1 < processedwithcost1[neigh1]:
                 # update cost
-                processedwithcost[neigh] = newcost
+                processedwithcost1[neigh1] = newcost1
                 # calculate heuristic
-                calpriority = newcost + astar(thinnedgraph, neigh, dest)[5]
-                nodequeue.add(neigh, calpriority)
-                path[neigh] = currentnode
+                temp1 = astar(thinnedgraph, neigh1, dest1)[5]
+                calpriority1 = newcost1 + temp1
+                nodequeue1.add(neigh1, calpriority1)
+                path1[neigh1] = currentnode1
         # print("priotity q ----> " + str(nodequeue))
-    timetaken = (t.datetime.now() - start_time).microseconds
-    return "F", None, [], timetaken, nodes_expended
+    timetaken1 = (t.datetime.now() - start_time1).microseconds
+    return "F", None, [], timetaken1, nodes_expended1
 
 
 def maze_thinning(p, maze):
@@ -180,5 +187,19 @@ def dispdata(data, name, sizelist):
 # dispdata(result, "Successcount", list(result.keys()))
 # plt.show()
 
-indexlist = np.random.choice(np.arange(10), 10, replace=False)
-print(indexlist)
+maze = mz.create_maze(10, 0.3)
+original_graph = mz.create_graph(maze)
+orginalmaze = maze.copy()
+thin_maze = maze_thinning(0.5, maze)
+thin_graph = mz.create_graph(maze)
+
+answer1 = astarthinning(thin_graph, original_graph, (0, 0), (9, 9))
+print(answer1)
+answer2 = astar(original_graph, (0, 0), (9, 9))
+print(answer2)
+answer3 = al.bibfs(original_graph, (0, 0), (9, 9))
+print(answer3)
+
+mazes = [orginalmaze, thin_maze]
+an.display(mazes)
+
