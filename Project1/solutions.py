@@ -68,7 +68,7 @@ def display(m, si):
 def sol1(maze1, size1, graph1, src1, dest1, f1, q):
     # print(graph1)
     result1 = al.bibfs(graph1, src1, dest1)
-    #print(result1)
+    print(result1)
     maze1[0][0] = 2
     maze1[size1 - 1][size1 - 1] = 5
     nodes_on_fire = []
