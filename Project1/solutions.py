@@ -48,14 +48,14 @@ def spread_fire(graph, onfire, flamability, a, b):
 # 'q1' is flamability
 # 'dsflag' this is display flag to diplay mazes if required
 def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
-    success = True
+    success = False
     totaltime1 = 0
     start1 = t.datetime.now()
     result1 = al.bibfs(graph1, src1, dest1)
     maze1[0][0] = 2
     maze1[size1 - 1][size1 - 1] = 5
     nodes_on_fire = []
-    maze1[fireStart[0]][fireStart[1]] = 3
+    maze1[f1[0]][f1[1]] = 3
     nodes_on_fire.append(f1)
     # print(result1[2][0])
     result1[2].pop(0)
@@ -63,6 +63,9 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
         step1 = result1[2].pop(0)
         # print(step1)
         maze1[step1[0]][step1[1]] = 2
+        if step1 == dest1:
+            success = True
+            totaltime1 = (t.datetime.now() - start1).microseconds
         spread_fire(graph1, nodes_on_fire, q1, src1, dest1)
         # print("nodes on fire --->" + str(nodes_on_fire))
         if step1 in nodes_on_fire:
@@ -74,10 +77,8 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
     for i in nodes_on_fire:
         maze1[i[0]][i[1]] = 3
 
-    if success:
-        totaltime1 = (t.datetime.now() - start1).microseconds
     if dsflag:
-        vis.display_maze_onfire(maze1, size1)
+        vis.display_maze_onfire(maze1, size1, q1, "SOLUTION 1")
     return success, totaltime1
 
 
@@ -96,7 +97,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
     maze2[0][0] = 2
     maze2[size2 - 1][size2 - 1] = 5
     nodes_on_fire = []
-    maze2[fireStart[0]][fireStart[1]] = 3
+    maze2[f2[0]][f2[1]] = 3
     nodes_on_fire.append(f2)
     step = src2
     while True:
@@ -123,7 +124,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
             nodes_on_fire.remove(step)
             break
     if dsflag:
-        vis.display_maze_onfire(maze2, size2)
+        vis.display_maze_onfire(maze2, size2, q2, "SOLUTION 2")
     return success2, totaltime2
 
 
@@ -133,14 +134,12 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
 # If the neighbor of the shortest path nodes are or fire or the path nodes are on fire it recomputes a
 # different path
 # 'f3' is the starting point of fire
-# 'q3' is falaimability
-# 'dsflag' this is display flag to diplay mazes if required
+# 'q3' is flamability
+# 'dsflag' this is display flag to display mazes if required
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
     def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
         currentnode = st
-        # print(level)
-        # print(currentnode)
         if currentnode in fire:
             # print(currentnode)
             return True
@@ -164,15 +163,13 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
     maze3[0][0] = 2  # mark starting point
     maze3[size3 - 1][size3 - 1] = 5  # mark ending point
     nodes_on_fire = []
-    maze3[fireStart[0]][fireStart[1]] = 3
+    maze3[f3[0]][f3[1]] = 3
     nodes_on_fire.append(f3)
     prevnode = src3
     while True:
-        # print(prevnode)
         step = result3[2].pop(1)
-        # print("Suggest step ->" + str(step))
         if step == dest3:
-            #  print("Success")
+            maze3[step[0]][step[1]] = 2
             success3 = True
             totaltime3 = (t.datetime.now() - start3).microseconds
             break
@@ -181,20 +178,14 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
         # print(check)
         if check:
             result3 = al.bibfs(mz.create_graph(maze3), prevnode, dest3)
-            # print("changed path")
-            # print(result3)
             if not result3[2]:
-                # print("Death by trap")
                 break
-            # print(result3[2])
             step = result3[2].pop(1)
         prevnode = step
-        # print("Step Taken---->" + str(step))
         maze3[step[0]][step[1]] = 2
         spread_fire(graph3, nodes_on_fire, q3, src3, dest3)
         for i in nodes_on_fire:
             maze3[i[0]][i[1]] = 3
-        # print("nodes on fire --->" + str(nodes_on_fire))
         if step in nodes_on_fire:
             # print("Death by fire")
             maze3[step[0]][step[1]] = 4
@@ -202,71 +193,99 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
             break
 
     if dsflag:
-        vis.display_maze_onfire(maze3, size3)
+        vis.display_maze_onfire(maze3, size3, q3, "SOLUTION 3")
     return success3, totaltime3
 
 
-resultstore = {}
-timelist = ["Totaltimetaken_Sol_1", "Totaltimetaken_Sol_2", "Totaltimetaken_Sol_3"]
-timetitle = "Flamability vs Average Time Taken"
-succestitle = "Flamability vs Average Number of Sucess"
-successratelist = ["TotalSuccessRate_Sol_1", "TotalSuccessRate_Sol_2", "TotalSuccessRate_Sol_3"]
-for inter in range(0, 2):
+# Generating Total time taken and Success Rate for flame probability
+def generate_result():
+    resultstore = {}
+    timelist = ["Totaltimetaken_Sol_1", "Totaltimetaken_Sol_2", "Totaltimetaken_Sol_3"]
+    timetitle = "Flamability vs Average Time Taken"
+    succestitle = "Flamability vs Average Number of Sucess"
+    successratelist = ["TotalSuccessRate_Sol_1", "TotalSuccessRate_Sol_2", "TotalSuccessRate_Sol_3"]
+    for inter in range(0, 2):
+        flamabilityList = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
+        s = 70                                                         # Selected Maze size
+        sr = (0, 0)
+        des = (s - 1, s - 1)
+        result = {}
+        for q in flamabilityList:
+            successcount1, successcount2, successcount3 = 0, 0, 0
+            timetakenS1, timetakenS2, timetakenS3 = [], [], []
+            counter = 0
+
+            while counter < 10:  # Total 10 iterations
+                m1 = mz.create_maze(s, 0.3)  # Create maze function
+                gr1 = mz.create_graph(m1)  # Then create graph
+                m2 = m1.copy()  # maze
+                gr2 = gr1.copy()  # graph
+                m3 = m1.copy()  # maze
+                gr3 = gr1.copy()  # graph
+                fireStart = let_there_be_fire(gr1, sr, des)  # initializes fire
+                if al.bibfs(gr1, sr, des)[0] == 'S' and fireStart is not None:
+
+                    # Solution 1
+                    rs1 = sol1(m1, s, gr1, sr, des, fireStart, q, False)  # m1 and gr1 used
+                    if rs1[0]:
+                        successcount1 += 1
+                        timetakenS1.append(rs1[1])
+
+                    # Solution 2
+                    rs2 = sol2(m2, s, gr2, sr, des, fireStart, q, False)  # m2 and gr2 used
+                    if rs2[0]:
+                        successcount2 += 1
+                        timetakenS2.append(rs2[1])
+
+                    # Solution 3
+                    rs3 = sol3(m3, s, gr3, sr, des, fireStart, q, False)  # m3 and gr3 used
+                    if rs3[0]:
+                        successcount3 += 1
+                        timetakenS3.append(rs3[1])
+                    counter += 1
+
+            result[q] = {"TotalSuccessRate_Sol_1": successcount1,
+                         "Totaltimetaken_Sol_1": st.mean(timetakenS1) if len(timetakenS1) > 0 else 0,
+                         "TotalSuccessRate_Sol_2": successcount2,
+                         "Totaltimetaken_Sol_2": st.mean(timetakenS2) if len(timetakenS2) > 0 else 0,
+                         "TotalSuccessRate_Sol_3": successcount3,
+                         "Totaltimetaken_Sol_3": st.mean(timetakenS3) if len(timetakenS3) > 0 else 0}
+
+        # Flamability vs Average Number of Success
+        vis.disp_graph_maze_onfire(result, flamabilityList, "Flamability", "Number of Success", succestitle,
+                                   successratelist)
+        # Flamability vs Average Time Taken
+        vis.disp_graph_maze_onfire(result, flamabilityList, "Flamability", "Time Taken (micro sec)", timetitle,
+                                   timelist)
+
+
+def generate_sample():
     flamabilityList = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-    s = 70
+    s = 20                                                               # Selected Maze size
     sr = (0, 0)
     des = (s - 1, s - 1)
-    result = {}
     for q in flamabilityList:
-        successcount1, successcount2, successcount3 = 0, 0, 0
-        timetakenS1, timetakenS2, timetakenS3 = [], [], []
-        counter = 0
+        m1 = mz.create_maze(s, 0.3)  # Create maze function
+        gr1 = mz.create_graph(m1)  # Then create graph
+        m2 = m1.copy()  # maze
+        gr2 = gr1.copy()  # graph
+        m3 = m1.copy()  # maze
+        gr3 = gr1.copy()  # graph
+        fire_St = let_there_be_fire(gr1, sr, des)  # initializes fire
+        if al.bibfs(gr1, sr, des)[0] == 'S' and fire_St is not None:
+            # Solution 1
+            rs1 = sol1(m1, s, gr1, sr, des, fire_St, q, True)  # m1 and gr1 used
 
-        while counter < 10:  # Total 10 iterations
-            m1 = mz.create_maze(s, 0.3)  # Create maze function
-            gr1 = mz.create_graph(m1)  # Then create graph
-            m2 = m1.copy()  # maze
-            gr2 = gr1.copy()  # graph
-            m3 = m1.copy()  # maze
-            gr3 = gr1.copy()  # graph
-            fireStart = let_there_be_fire(gr1, sr, des)  # initializes fire
-            # print("fireStart: " + str(fireStart))
-            if al.bibfs(gr1, sr, des)[0] == 'S' and fireStart is not None:
-                # print(counter)
-                # Solution 1
-                # print("SOL1")
-                rs1 = sol1(m1, s, gr1, sr, des, fireStart, q, False)  # m1 and gr1 used
-                if rs1[0]:
-                    successcount1 += 1
-                    timetakenS1.append(rs1[1])
-                # print(t1)
+            # Solution 2
+            rs2 = sol2(m2, s, gr2, sr, des, fire_St, q, True)  # m2 and gr2 used
 
-                # Solution 2
-                # print("SOL2")
-                rs2 = sol2(m2, s, gr2, sr, des, fireStart, q, False)  # m2 and gr2 used
-                if rs2[0]:
-                    successcount2 += 1
-                    timetakenS2.append(rs2[1])
-                # print(t2)
-                # Solution 3
-                # print("SOL3")
-                rs3 = sol3(m3, s, gr3, sr, des, fireStart, q, False)  # m3 and gr3 used
-                if rs3[0]:
-                    successcount3 += 1
-                    timetakenS3.append(rs3[1])
-                # print(t3)
-                counter += 1
+            # Solution 3
+            rs3 = sol3(m3, s, gr3, sr, des, fire_St, q, True)  # m3 and gr3 used
 
-        result[q] = {"TotalSuccessRate_Sol_1": successcount1,
-                     "Totaltimetaken_Sol_1": st.mean(timetakenS1) if len(timetakenS1) > 0 else 0,
-                     "TotalSuccessRate_Sol_2": successcount2,
-                     "Totaltimetaken_Sol_2": st.mean(timetakenS2) if len(timetakenS2) > 0 else 0,
-                     "TotalSuccessRate_Sol_3": successcount3,
-                     "Totaltimetaken_Sol_3": st.mean(timetakenS3) if len(timetakenS3) > 0 else 0}
+    plt.show()
 
-    # Flamability vs Average Number of Success
-    vis.disp_graph_maze_onfire(result, flamabilityList, "Flamability", "Number of Success", succestitle,
-                               successratelist)
-    # Flamability vs Average Time Taken
-    vis.disp_graph_maze_onfire(result, flamabilityList, "Flamability", "Time Taken (micro sec)", timetitle, timelist)
-plt.show()
+# Generating samples
+#generate_result()
+generate_sample()
+
+#plt.show()

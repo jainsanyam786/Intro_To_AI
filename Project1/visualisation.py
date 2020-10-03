@@ -85,15 +85,15 @@ def disp_stats_for_probab(data, startsize, endsize, step, probability_list):
 # Function used to display the maze after the agent is burned or reached destination
 # m is maze and si is size
 # 'bounds' is used as enumerator for each color node
-def display_maze_onfire(m, si):
+def display_maze_onfire(m, si, flamability, solut):
     cmap = ListedColormap(['w', 'k', 'c', 'y', 'r', 'g'])
     bounds = [0, 1, 2, 3, 4, 5, 6]
     norm = colors.BoundaryNorm(bounds, cmap.N)
-
     fig = plt.figure()
     gs = gridspec.GridSpec(2, 1)
     ax = fig.add_subplot(gs[0])
     ax.matshow(m, cmap=cmap, norm=norm)
+    ax.set_title("Path through maze on fire: Size " + str(si) + " with flamability " + str(flamability) + " for " + solut)
     ax.set_xticks(np.arange(-0.5, si, 1))
     ax.set_yticks(np.arange(-0.5, si, 1))
     ax.set_xticklabels(np.arange(0, si + 1, 1), rotation=90, horizontalalignment="center")
