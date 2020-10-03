@@ -59,6 +59,42 @@ def display(m, si):
     ax.grid(color='k', linestyle='-', linewidth=2)
 
 
+# Flamability vs Time
+def disp_time_for_probab3(data, flamabilityList):
+    fig = plt.figure()
+    ax1 = fig.add_subplot()
+    ax1.set_xlabel("Flamability")
+    ax1.set_ylabel("Time")
+    ax1.set_title("Flamability vs Time")
+    timelist = ["Totaltimetaken_Sol_1", "Totaltimetaken_Sol_2", "Totaltimetaken_Sol_3"]
+
+    for name in timelist:
+        time = list(map(lambda key: (data.get(key)).get(name), data.keys()))
+        print("Time: " + str(time))
+        ax1.plot(flamabilityList, time,  label=name)
+    ax1.legend(title="Solutions")
+    ax1.grid(True)
+
+
+
+
+# Flamability vs Success Rate
+def disp_time_for_probab(data, flamabilityList):
+    fig = plt.figure()
+    ax1 = fig.add_subplot()
+    ax1.set_xlabel("Flamability")
+    ax1.set_ylabel("Success Rate")
+    ax1.set_title("Flamability vs Success Rate")
+    successlist = ["TotalSuccessRate_Sol_1", "TotalSuccessRate_Sol_2", "TotalSuccessRate_Sol_3"]
+
+    for name in successlist:
+        success = list(map(lambda key: (data.get(key)).get(name), data.keys()))
+        print("Time: " + str(success))
+        ax1.plot(flamabilityList, success,  label=name)
+    ax1.legend(title="Solutions")
+    ax1.grid(True)
+
+
 # Function helps to sense the fire till required depth
 # Used in Solution 3
 
@@ -67,7 +103,7 @@ def display(m, si):
 # Agent follows the searched path without changing or recomputing it.
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
-# 'q1' is falaimability
+# 'q1' is flamability
 # 'dsflag' this is display flag to diplay mazes if required
 def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
     success = True
@@ -244,7 +280,7 @@ for inter in range(0, 2):
         timetakenS1, timetakenS2, timetakenS3 = [], [], []
         counter = 0
 
-        while counter < 10:
+        while counter < 10:                                          # Total 10 iterations
             m1 = mz.create_maze(s, 0.3)  # Create maze function
             gr1 = mz.create_graph(m1)  # Then create graph
             m2 = m1.copy()  # maze
@@ -257,7 +293,7 @@ for inter in range(0, 2):
                 print(counter)
                 # Solution 1
                 print("SOL1")
-                rs1 = sol1(m1, s, gr1, sr, des, fireStart, q)  # m1 and gr1 used
+                rs1 = sol1(m1, s, gr1, sr, des, fireStart, q, False)  # m1 and gr1 used
                 if rs1[0]:
                     successcount1 += 1
                     timetakenS1.append(rs1[1])
@@ -265,21 +301,29 @@ for inter in range(0, 2):
 
                 # Solution 2
                 print("SOL2")
-                rs2 = sol2(m2, s, gr2, sr, des, fireStart, q)  # m2 and gr2 used
+                rs2 = sol2(m2, s, gr2, sr, des, fireStart, q, False)  # m2 and gr2 used
                 if rs2[0]:
                     successcount2 += 1
                     timetakenS2.append(rs2[1])
                 # print(t2)
                 # Solution 3
                 print("SOL3")
-                rs3 = sol3(m3, s, gr3, sr, des, fireStart, q)  # m3 and gr3 used
+                rs3 = sol3(m3, s, gr3, sr, des, fireStart, q, False)  # m3 and gr3 used
                 if rs3[0]:
                     successcount3 += 1
                     timetakenS3.append(rs3[1])
                 # print(t3)
                 counter += 1
 
-        result[q] = {successcount1, np.average(timetakenS1), successcount2, np.average(timetakenS2),
-                     successcount3, np.average(timetakenS3)}
+        result[q] = {"TotalSuccessRate_Sol_1": successcount1,
+                     "Totaltimetaken_Sol_1": np.average(timetakenS1),
+                     "TotalSuccessRate_Sol_2": successcount2,
+                     "Totaltimetaken_Sol_2": np.average(timetakenS2),
+                     "TotalSuccessRate_Sol_3": successcount3,
+                     "Totaltimetaken_Sol_3": np.average(timetakenS3)}
+
+    disp_time_for_probab(result, flamabilityList)      # Flamability vs Success Rate
+    disp_time_for_probab3(result, flamabilityList)      # Flamability vs Time
     resultstore[inter] = result
 print(resultstore)
+plt.show()

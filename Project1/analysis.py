@@ -41,6 +41,7 @@ def disp_path_for_probab3(data, startsize, endsize, step):
     ax1 = fig.add_subplot()
     ax1.set_xlabel("Size")
     ax1.set_ylabel("Path")
+    ax1.set_title("Size vs Path with probability 0.3")
     size_list = []
     for size in range(startsize, endsize + step, step):
         size_list.append(size)
@@ -49,7 +50,7 @@ def disp_path_for_probab3(data, startsize, endsize, step):
         d = data.get(0.3)
         path = list(map(lambda key: (d.get(key)).get(algo + "_path"), d.keys()))
         ax1.scatter(size_list, path, label=algo)
-    ax1.legend(title="Size vs Path")
+    ax1.legend(title="Search Algorithms")
     ax1.grid(True)
 
 
@@ -59,6 +60,7 @@ def disp_time_for_probab3(data, startsize, endsize, step):
     ax1 = fig.add_subplot()
     ax1.set_xlabel("Size")
     ax1.set_ylabel("Time")
+    ax1.set_title("Size vs Path with probability 0.3")
     size_list = []
     for size in range(startsize, endsize + step, step):
         size_list.append(size)
@@ -67,7 +69,7 @@ def disp_time_for_probab3(data, startsize, endsize, step):
         d = data.get(0.3)
         time = list(map(lambda key: (d.get(key)).get(algo + "_time"), d.keys()))
         ax1.scatter(size_list, time, label=algo)
-    ax1.legend(title="Size vs Time")
+    ax1.legend(title="Search Algorithms")
     ax1.grid(True)
 
 
@@ -101,7 +103,7 @@ def letsfind():
     endsize = int(input("Enter the max size "))
     step = int(input("Enter the growth size "))
     data = {}                                                           # The main dictionary
-    probability_list = [0.1, 0.3, 0.5, 0.7, ]                   # Probability list
+    probability_list = [0.1, 0.3, 0.5, 0.7]                   # Probability list
     for probability in probability_list:                                # Looping for each probability
         subdict = {}
         for size in range(startsize, endsize + step, step):             # Looping for each size defined
