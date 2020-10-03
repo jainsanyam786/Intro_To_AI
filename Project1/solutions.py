@@ -48,8 +48,6 @@ def spread_fire(graph, onfire, flamability, a, b):
 # 'q1' is flamability
 # 'dsflag' this is display flag to diplay mazes if required
 def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
-    success = False
-    totaltime1 = 0
     start1 = t.datetime.now()
     result1 = al.bibfs(graph1, src1, dest1)
     maze1[0][0] = 2
@@ -61,25 +59,22 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
     result1[2].pop(0)
     for i in range(len(result1[2])):
         step1 = result1[2].pop(0)
-        # print(step1)
         maze1[step1[0]][step1[1]] = 2
         if step1 == dest1:
-            success = True
-            totaltime1 = (t.datetime.now() - start1).microseconds
+            if dsflag:
+                vis.display_maze_onfire(maze1, size1, q1, "SOLUTION 1")
+            return True, (t.datetime.now() - start1).microseconds
         spread_fire(graph1, nodes_on_fire, q1, src1, dest1)
         # print("nodes on fire --->" + str(nodes_on_fire))
+        for j in nodes_on_fire:
+            maze1[j[0]][j[1]] = 3
         if step1 in nodes_on_fire:
             # print("Death by fire")
             maze1[step1[0]][step1[1]] = 4
             nodes_on_fire.remove(step1)
-            success = False
-            break
-    for i in nodes_on_fire:
-        maze1[i[0]][i[1]] = 3
-
-    if dsflag:
-        vis.display_maze_onfire(maze1, size1, q1, "SOLUTION 1")
-    return success, totaltime1
+            if dsflag:
+                vis.display_maze_onfire(maze1, size1, q1, "SOLUTION 1")
+            return False, 0
 
 
 # intelligent but cheater
@@ -99,17 +94,17 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
     nodes_on_fire = []
     maze2[f2[0]][f2[1]] = 3
     nodes_on_fire.append(f2)
-    step = src2
+    step2 = src2
     while True:
-        result2 = al.bibfs(mz.create_graph(maze2), step, dest2)
+        result2 = al.bibfs(mz.create_graph(maze2), step2, dest2)
         if not result2[2]:
             # print("Death by trap")
             break
         # print(result2[2])
-        step = result2[2].pop(1)
+        step2 = result2[2].pop(1)
         # print(step)
-        maze2[step[0]][step[1]] = 2
-        if step == dest2:
+        maze2[step2[0]][step2[1]] = 2
+        if step2 == dest2:
             # print("Success")
             success2 = True
             totaltime2 = (t.datetime.now() - start2).microseconds
@@ -118,10 +113,10 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
         for i in nodes_on_fire:
             maze2[i[0]][i[1]] = 3
         # print("nodes on fire --->" + str(nodes_on_fire))
-        if step in nodes_on_fire:
+        if step2 in nodes_on_fire:
             # print("Death by fire")
-            maze2[step[0]][step[1]] = 4
-            nodes_on_fire.remove(step)
+            maze2[step2[0]][step2[1]] = 4
+            nodes_on_fire.remove(step2)
             break
     if dsflag:
         vis.display_maze_onfire(maze2, size2, q2, "SOLUTION 2")
@@ -140,6 +135,8 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
 def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
     def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
         currentnode = st
+        # print(level)
+        # print(currentnode)
         if currentnode in fire:
             # print(currentnode)
             return True
@@ -167,9 +164,9 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
     nodes_on_fire.append(f3)
     prevnode = src3
     while True:
-        step = result3[2].pop(1)
-        if step == dest3:
-            maze3[step[0]][step[1]] = 2
+        step3 = result3[2].pop(1)
+        if step3 == dest3:
+            maze3[step3[0]][step3[1]] = 2
             success3 = True
             totaltime3 = (t.datetime.now() - start3).microseconds
             break
@@ -180,16 +177,15 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
             result3 = al.bibfs(mz.create_graph(maze3), prevnode, dest3)
             if not result3[2]:
                 break
-            step = result3[2].pop(1)
-        prevnode = step
-        maze3[step[0]][step[1]] = 2
+            step3 = result3[2].pop(1)
+        prevnode = step3
+        maze3[step3[0]][step3[1]] = 2
         spread_fire(graph3, nodes_on_fire, q3, src3, dest3)
         for i in nodes_on_fire:
             maze3[i[0]][i[1]] = 3
-        if step in nodes_on_fire:
+        if step3 in nodes_on_fire:
             # print("Death by fire")
-            maze3[step[0]][step[1]] = 4
-            nodes_on_fire.remove(step)
+            maze3[step3[0]][step3[1]] = 4
             break
 
     if dsflag:
@@ -206,7 +202,7 @@ def generate_result():
     successratelist = ["TotalSuccessRate_Sol_1", "TotalSuccessRate_Sol_2", "TotalSuccessRate_Sol_3"]
     for inter in range(0, 2):
         flamabilityList = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-        s = 70                                                         # Selected Maze size
+        s = 70  # Selected Maze size
         sr = (0, 0)
         des = (s - 1, s - 1)
         result = {}
@@ -260,11 +256,12 @@ def generate_result():
 
 
 def generate_sample():
-    flamabilityList = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-    s = 20                                                               # Selected Maze size
+    flamability = 0.8
+    s = 10  # Selected Maze size
     sr = (0, 0)
     des = (s - 1, s - 1)
-    for q in flamabilityList:
+    num = 0
+    while num != 1:
         m1 = mz.create_maze(s, 0.3)  # Create maze function
         gr1 = mz.create_graph(m1)  # Then create graph
         m2 = m1.copy()  # maze
@@ -274,18 +271,22 @@ def generate_sample():
         fire_St = let_there_be_fire(gr1, sr, des)  # initializes fire
         if al.bibfs(gr1, sr, des)[0] == 'S' and fire_St is not None:
             # Solution 1
-            rs1 = sol1(m1, s, gr1, sr, des, fire_St, q, True)  # m1 and gr1 used
+            sol1(m1, s, gr1, sr, des, fire_St, flamability, True)  # m1 and gr1 used
 
             # Solution 2
-            rs2 = sol2(m2, s, gr2, sr, des, fire_St, q, True)  # m2 and gr2 used
+            sol2(m2, s, gr2, sr, des, fire_St, flamability, True)  # m2 and gr2 used
 
             # Solution 3
-            rs3 = sol3(m3, s, gr3, sr, des, fire_St, q, True)  # m3 and gr3 used
+            sol3(m3, s, gr3, sr, des, fire_St, flamability, True)  # m3 and gr3 used
+            num = 1
 
     plt.show()
 
-# Generating samples
-#generate_result()
-generate_sample()
 
-#plt.show()
+# generate_result()
+generate_result()
+
+# Generating samples
+# generate_sample()
+
+# plt.show()

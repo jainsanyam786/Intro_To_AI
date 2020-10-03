@@ -9,11 +9,11 @@ import matplotlib.gridspec as gridspec
 # This function helps to display the maze.
 # matplotlib library is imported and to generate a figure.
 # Configured the maze with required specifications
-def display(item, size, prob):
+def display_maze(item, size, title):
     fig = plt.figure()
     ax = fig.add_subplot()
     ax.matshow(item, cmap=cm.binary)
-    ax.set_title("Maze with size " + str(size) + " and probability of " + str(prob))
+    ax.set_title(title)
     ax.set_xticks(np.arange(-0.5, size, 1))
     ax.set_yticks(np.arange(-0.5, size, 1))
     ax.set_xticklabels(np.arange(0, size + 1, 1), rotation=90, horizontalalignment="right")
@@ -93,7 +93,8 @@ def display_maze_onfire(m, si, flamability, solut):
     gs = gridspec.GridSpec(2, 1)
     ax = fig.add_subplot(gs[0])
     ax.matshow(m, cmap=cmap, norm=norm)
-    ax.set_title("Path through maze on fire: Size " + str(si) + " with flamability " + str(flamability) + " for " + solut)
+    ax.set_title(
+        "Size :: " + str(si) + " , Flamability:: " + str(flamability) + " , Solution:: " + solut)
     ax.set_xticks(np.arange(-0.5, si, 1))
     ax.set_yticks(np.arange(-0.5, si, 1))
     ax.set_xticklabels(np.arange(0, si + 1, 1), rotation=90, horizontalalignment="center")
@@ -111,7 +112,48 @@ def disp_graph_maze_onfire(data, flamabilityList, xlabel, ylabel, title, varlist
 
     for name in varlist:
         value = list(map(lambda key: (data.get(key)).get(name), data.keys()))
-        ax1.plot(flamabilityList, value,  label=name)
+        ax1.plot(flamabilityList, value, label=name)
     ax1.legend(title="Solutions")
     ax1.grid(True)
 
+
+def dispdata(data, name, sizelist, title):
+    fig = plt.figure()
+    ax1 = fig.add_subplot()
+    ax1.set_xlabel("Size")
+    ax1.set_ylabel(name)
+    ax1.set_title(title)
+    val = list(map(lambda key: (data.get(key)).get(name), data.keys()))
+    ax1.scatter(sizelist, val, label=name)
+    ax1.legend(title="Size vs " + name)
+    ax1.grid(True)
+
+
+def disp_data(data, varname, xlable, ylabel, title):
+    fig = plt.figure()
+    ax1 = fig.add_subplot()
+    ax1.set_xlabel(xlable)
+    ax1.set_ylabel(ylabel)
+    ax1.set_title(title)
+    thiningfactors = list(data.keys())
+    processmap = {"Manhattan": "M", "Euclidean": "E", "Thining": "TH", "Diagonal": "Dia"}
+
+    for process in list(processmap.keys()):
+        pr = processmap.get(process)
+        keys = data.keys()
+        success = list(map(lambda key: round(data.get(key).get(pr).get(varname)), data.keys()))
+        ax1.plot(thiningfactors, success, label=process)
+    ax1.legend(title="Process")
+    ax1.grid(True)
+
+
+def disp_data2(data, varname, ylabel, xlable, title):
+    fig = plt.figure()
+    ax1 = fig.add_subplot()
+    ax1.set_xlabel(xlable)
+    ax1.set_ylabel(ylabel)
+    ax1.set_title(title)
+    iterations = range(1, len(data.keys()) + 1)
+    success = list(map(lambda key: data.get(key).get(varname), data.keys()))
+    ax1.scatter(iterations, success, label=iterations)
+    ax1.grid(True)

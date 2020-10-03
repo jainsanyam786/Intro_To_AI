@@ -17,7 +17,7 @@ def generate_sample():
             print("Sample mazes of " + str(size) + " with " + str(prob) + " will be generated")
             for x in range(0, 2):  # 2 Iterations and mean results
                 maze = mz.create_maze(size, prob)
-                vis.display(maze, size, prob)
+                vis.display_maze(maze, size, "Maze with size " + str(size) + " and probability of " + str(prob))
 
 
 # Generating dictionary with probability from 0.1 to 0.9 and value holds another dictionary with keys as size and
