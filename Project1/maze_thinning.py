@@ -1,17 +1,21 @@
-import math as m
 import datetime as t
 import numpy as np
 import createmaze as mz
 import matplotlib.pyplot as plt
 import algorithm as al
-import analysis as an
-
+import math as m
+import visualisation as vis
 
 # This is priority queue
+from test import gr
+
+
 class PriorityQueue(object):
+    # initiate the queue
     def __init__(self):
         self.pqueue = []
 
+    # display the cony
     def __str__(self):
         return ' '.join([str(i) for i in self.pqueue])
 
@@ -44,11 +48,11 @@ def manhattan(start, end):
 
 
 def euclidean(start, end):
-    val = m.sqrt(((start[0] - end[0])**2) + ((start[1] - end[1])**2))
+    val = m.sqrt(((start[0] - end[0]) ** 2) + ((start[1] - end[1]) ** 2))
     return val
 
 
-def astar(graph, src, dest):
+def astar(graph, src, dest, option):
     start_time = t.datetime.now()
     nodequeue = PriorityQueue()
     nodequeue.add(src, 0)
@@ -62,7 +66,7 @@ def astar(graph, src, dest):
         # print("Current node ----> " + str(currentnode))
         if currentnode == dest:
             timetaken = (t.datetime.now() - start_time).microseconds
-            path = get_path(path, src, dest)
+            path = al.get_path(path, src, dest)
             return "S", currentnode, path, timetaken, nodes_expended, len(path)
         # fetch the neighbour of current node
         for neigh in graph.get(currentnode):
@@ -73,7 +77,12 @@ def astar(graph, src, dest):
                 # update cost
                 processedwithcost[neigh] = newcost
                 # calculate heuristic
-                calpriority = newcost + manhattan(neigh, dest)
+                # if option is M heuristic is Manhattan distance else it is euclidean
+                if option == "M":
+                    calpriority = newcost + manhattan(neigh, dest)
+                else:
+                    calpriority = newcost + euclidean(neigh, dest)
+
                 nodequeue.add(neigh, calpriority)
                 path[neigh] = currentnode
         # print("priotity q ----> " + str(nodequeue))
@@ -94,8 +103,9 @@ def astarthinning(thinnedgraph, graph, src1, dest1):
         currentnode1 = nodequeue1.popmin()
         # print("Current node ----> " + str(currentnode))
         if currentnode1 == dest1:
+            path1 = al.get_path(path1, src1, dest1)
             timetaken1 = (t.datetime.now() - start_time1).microseconds
-            return "S", currentnode1, get_path(path1, src1, dest1), timetaken1, nodes_expended1
+            return "S", currentnode1, path1, timetaken1, nodes_expended1, len(path1)
         # fetch the neighbour of current node
         for neigh1 in graph.get(currentnode1):
             newcost1 = processedwithcost1[currentnode1] + 1  # Travellingcost
@@ -105,7 +115,7 @@ def astarthinning(thinnedgraph, graph, src1, dest1):
                 # update cost
                 processedwithcost1[neigh1] = newcost1
                 # calculate heuristic
-                temp1 = astar(thinnedgraph, neigh1, dest1)[5]
+                temp1 = astar(thinnedgraph, neigh1, dest1, "M")[5]
                 calpriority1 = newcost1 + temp1
                 nodequeue1.add(neigh1, calpriority1)
                 path1[neigh1] = currentnode1
@@ -114,31 +124,38 @@ def astarthinning(thinnedgraph, graph, src1, dest1):
     return "F", None, [], timetaken1, nodes_expended1
 
 
-def maze_thinning(p, maze):
-    blocked = []
-    for i in range(len(maze)):
-        for j in range(len(maze[i])):
-            if maze[i][j] == 1:
-                blocked.append((i, j))
-    num_obstacles_to_remove = m.floor(p * len(blocked))
-    indexlist = np.random.choice(np.arange(len(blocked)), num_obstacles_to_remove, replace=False)
-    for i in indexlist:
-        maze[blocked[i][0]][blocked[i][1]] = 0
-    return maze
-
-
-def get_path(path, src, dest):
-    pathtaken = [dest]
-    child = dest
-    parent = dest
-    while parent != src:
-        parent = path.get(child)
-        if parent is None:
-            return None
-        pathtaken.append(parent)
-        child = parent
-    pathtaken.reverse()
-    return pathtaken
+def astardiagonal(diagonalgraph, graph, src2, dest2):
+    start_time2 = t.datetime.now()
+    nodequeue2 = PriorityQueue()
+    nodequeue2.add(src2, 0)
+    processedwithcost2 = {}
+    path2 = {src2: src2}
+    processedwithcost2[src2] = 0
+    nodes_expended2 = 0
+    while not nodequeue2.isempty():
+        nodes_expended2 += 1
+        currentnode2 = nodequeue2.popmin()
+        # print("Current node ----> " + str(currentnode))
+        if currentnode2 == dest2:
+            path2 = al.get_path(path2, src2, dest2)
+            timetaken2 = (t.datetime.now() - start_time2).microseconds
+            return "S", currentnode2, path2, timetaken2, nodes_expended2, len(path2)
+        # fetch the neighbour of current node
+        for neigh2 in graph.get(currentnode2):
+            newcost2 = processedwithcost2[currentnode2] + 1  # Travellingcost
+            # print("Current cost ----> " + str(newcost))
+            # check if neighbour already there or current cost for neighbour is less then present cost
+            if neigh2 not in processedwithcost2 or newcost2 < processedwithcost2[neigh2]:
+                # update cost
+                processedwithcost2[neigh2] = newcost2
+                # calculate heuristic
+                temp2 = astar(diagonalgraph, neigh2, dest2, "M")[5]
+                calpriority2 = newcost2 + temp2
+                nodequeue2.add(neigh2, calpriority2)
+                path2[neigh2] = currentnode2
+        # print("priotity q ----> " + str(nodequeue))
+    timetaken2 = (t.datetime.now() - start_time2).microseconds
+    return "F", None, [], timetaken2, nodes_expended2
 
 
 def dispdata(data, name, sizelist):
@@ -152,30 +169,68 @@ def dispdata(data, name, sizelist):
     ax1.grid(True)
 
 
-# maze = mz.create_maze(25, 0.3)
-# orginalmaze = maze.copy()
-# thin_maze = maze_thinning(0.5, maze)
-# mazes = [orginalmaze, thin_maze]
-# an.display(mazes)
+thinninglist = [0.2, 0.4, 0.6, 0.8]
+size = 20
 
-# result = {}
-# for size in range(50, 60, 10):
-#     time = []
-#     count = 0
-#     total_nodes = []
-#     nodes_Expended = []
-#     for i in range(0, 100):
-#         m = mz.create_maze(size, 0.3)
-#         gr = mz.create_graph(m)
-#         total_nodes.append(len(gr.keys()))
-#         answer = astar(gr, (0, 0), (size-1, size-1))
-#         if answer[0] == "S":
-#             count += 1
-#         time.append(answer[3])
-#         nodes_Expended.append(answer[4])
-#     result[size] = {"Average_time(microsec)": np.average(time), "Average_nodes_expended": np.average(nodes_Expended),
-#                     "Average_nodes": np.average(total_nodes), "Successcount": count}
-#
+result = {}
+for thin in thinninglist:
+    time_m = []
+    time_e = []
+    time_thin = []
+    time_diagonal = []
+    successcount = 0
+    total_nodes = []
+    nodes_expended_m = []
+    nodes_expended_e = []
+    nodes_expended_thin = []
+    nodes_expended_diagonal = []
+    path_length_m = []
+    path_length_e = []
+    path_length_thin = []
+    path_length_diagonal = []
+    for i in range(0, 100):
+        maze = mz.create_maze(size, 0.3)
+        original_maze = maze.copy()
+        thined_maze = mz.maze_thinning(thin, maze)
+        original_graph = mz.create_graph(original_maze)
+        thined_graph = mz.create_graph(thined_maze)
+        diagonal_graph = mz.create_relaxedgraph(original_maze)
+        total_nodes.append(len(original_graph.keys()))
+        answer1 = astar(original_graph, (0, 0), (size - 1, size - 1), "M")
+        answer2 = astar(original_graph, (0, 0), (size - 1, size - 1), "E")
+        answer3 = astarthinning(thined_graph, original_graph, (0, 0), (size - 1, size - 1))
+        answer4 = astardiagonal(diagonal_graph, original_graph, (0, 0), (size - 1, size - 1))
+        if answer1[0] == "S":
+            successcount += 1
+            time_m.append(answer1[3])
+            time_e.append(answer2[3])
+            time_thin.append(answer3[3])
+            time_diagonal.append(answer4[3])
+            nodes_expended_m.append(answer1[4])
+            nodes_expended_e.append(answer2[4])
+            nodes_expended_thin.append(answer3[4])
+            nodes_expended_diagonal.append(answer4[4])
+            path_length_m.append(answer1[4])
+            path_length_e.append(answer2[4])
+            path_length_thin.append(answer3[4])
+            path_length_diagonal.append(answer4[4])
+    result[thin] = {"M": {"Average_time(microsec)": np.average(time_m),
+                          "Average_nodes_expended": np.average(nodes_expended_m),
+                          "Average_path_length": np.average(path_length_m)},
+                    "E": {"Average_time(microsec)": np.average(time_e),
+                          "Average_nodes_expended": np.average(nodes_expended_e),
+                          "Average_path_length": np.average(path_length_e)},
+                    "TH": {"Average_time(microsec)": np.average(time_thin),
+                           "Average_nodes_expended": np.average(nodes_expended_thin),
+                           "Average_path_length": np.average(path_length_thin)},
+                    "Dia": {"Average_time(microsec)": np.average(time_diagonal),
+                            "Average_nodes_expended": np.average(nodes_expended_diagonal),
+                            "Average_path_length": np.average(path_length_diagonal)},
+                    "Average_Nodes_Nodes": np.average(total_nodes),
+                    "Success_count": successcount
+                    }
+print(result)
+
 # averageTime = list(map(lambda key: (result.get(key)).get("Average_time(microsec)"), result.keys()))
 # averageNodeEx = list(map(lambda key: (result.get(key)).get("Average_nodes_expended"), result.keys()))
 # averageNode = list(map(lambda key: (result.get(key)).get("Average_nodes"), result.keys()))
@@ -186,20 +241,40 @@ def dispdata(data, name, sizelist):
 # dispdata(result, "Average_time(microsec)", list(result.keys()))
 # dispdata(result, "Successcount", list(result.keys()))
 # plt.show()
-
-maze = mz.create_maze(10, 0.3)
-original_graph = mz.create_graph(maze)
-orginalmaze = maze.copy()
-thin_maze = maze_thinning(0.5, maze)
-thin_graph = mz.create_graph(maze)
-
-answer1 = astarthinning(thin_graph, original_graph, (0, 0), (9, 9))
-print(answer1)
-answer2 = astar(original_graph, (0, 0), (9, 9))
-print(answer2)
-answer3 = al.bibfs(original_graph, (0, 0), (9, 9))
-print(answer3)
-
-mazes = [orginalmaze, thin_maze]
-an.display(mazes)
-
+#
+# maze = mz.create_maze(10, 0.3)
+# original_graph = mz.create_graph(maze)
+# orginalmaze = maze.copy()
+# thin_maze = maze_thinning(0.5, maze)
+# thin_graph = mz.create_graph(thin_maze)
+#
+# answer1 = astarthinning(thin_graph, original_graph, (0, 0), (9, 9))
+# print(answer1)
+# answer2 = astar(original_graph, (0, 0), (9, 9))
+# print(answer2)
+# answer3 = al.bibfs(original_graph, (0, 0), (9, 9))
+# print(answer3)
+#
+# mazes = [orginalmaze, thin_maze]
+# an.display(mazes)
+#
+# size = 30
+# maze = mz.create_maze(size, 0.3)
+# orginalmaze = maze.copy()
+# thin_maze = maze_thinning(0.5, maze)
+# original_graph = mz.create_graph(orginalmaze)
+# thin_graph = mz.create_graph(thin_maze)
+# relaxed_graph = mz.create_relaxedgraph(orginalmaze)
+#
+# print(original_graph)
+# print(relaxed_graph)
+# print(thin_graph)
+# result1 = astar(original_graph, (0, 0), (size - 1, size - 1), "M")
+# print(result1)
+# result2 = astarthinning(thin_graph, original_graph, (0, 0), (size - 1, size - 1))
+# print(result2)
+# result3 = astardiagonal(relaxed_graph, original_graph, (0, 0), (size - 1, size - 1))
+# print(result3)
+# vis.display(orginalmaze, size, 0.3)
+# vis.display(thin_maze, size, 0.3)
+# plt.show()
