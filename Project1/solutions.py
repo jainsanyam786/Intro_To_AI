@@ -67,15 +67,17 @@ def display(m, si):
 # Agent follows the searched path without changing or recomputing it.
 # 'f1' is the starting point of fire
 # Using Bidirectional BFS to find the shortest path from Algorithm class
-def sol1(maze1, size1, graph1, src1, dest1, f1, q):
+# 'q1' is falaimability
+# 'dsflag' this is display flag to diplay mazes if required
+def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
+    success = True
+    totaltime1 = 0
     start1 = t.datetime.now()
-    # print(graph1)
     result1 = al.bibfs(graph1, src1, dest1)
     print(result1)
     maze1[0][0] = 2
     maze1[size1 - 1][size1 - 1] = 5
     nodes_on_fire = []
-    # if result1[0] == "S" and fn is not None:
     maze1[fireStart[0]][fireStart[1]] = 3
     nodes_on_fire.append(f1)
     # print(result1[2][0])
@@ -84,33 +86,39 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q):
         step1 = result1[2].pop(0)
         # print(step1)
         maze1[step1[0]][step1[1]] = 2
-        spread_fire(graph1, nodes_on_fire, q, src1, dest1)
+        spread_fire(graph1, nodes_on_fire, q1, src1, dest1)
         # print("nodes on fire --->" + str(nodes_on_fire))
         if step1 in nodes_on_fire:
             # print("Death by fire")
             maze1[step1[0]][step1[1]] = 4
             nodes_on_fire.remove(step1)
-            return False, 0
+            success = False
+            break
     for i in nodes_on_fire:
         maze1[i[0]][i[1]] = 3
-    # display(maze1, size1)
-    return True, (t.datetime.now() - start1).microseconds
+
+    if success:
+        totaltime1 = (t.datetime.now() - start1).microseconds
+    if dsflag:
+        display(maze1, size1)
+    return success, totaltime1
 
 
 # intelligent but cheater
 # Solution 2
 # Agent follows the searched path and changes path by recomputing.
 # Recomputing takes places when any of the given path node is on fire
-# 'f1' is the starting point of fire
+# 'f2' is the starting point of fire
+# 'q2' is falaimability
+# 'dsflag' this is display flag to diplay mazes if required
 # Using Bidirectional BFS to find the shortest path from Algorithm class
-def sol2(maze2, size2, graph2, src2, dest2, f2, q):
+def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
+    success2 = False
+    totaltime2 = 0
     start2 = t.datetime.now()
-    result2 = al.bibfs(graph2, src2, dest2)
-    # print(result2)
     maze2[0][0] = 2
     maze2[size2 - 1][size2 - 1] = 5
     nodes_on_fire = []
-    # if result2[0] == "S" and fn is not None:
     maze2[fireStart[0]][fireStart[1]] = 3
     nodes_on_fire.append(f2)
     step = src2
@@ -118,15 +126,17 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
         result2 = al.bibfs(mz.create_graph(maze2), step, dest2)
         if not result2[2]:
             # print("Death by trap")
-            return False, 0
+            break
         # print(result2[2])
         step = result2[2].pop(1)
         # print(step)
         maze2[step[0]][step[1]] = 2
         if step == dest2:
             # print("Success")
-            return True, (t.datetime.now() - start2).microseconds
-        spread_fire(graph2, nodes_on_fire, q, src2, dest2)
+            success2 = True
+            totaltime2 = (t.datetime.now() - start2).microseconds
+            break
+        spread_fire(graph2, nodes_on_fire, q2, src2, dest2)
         for i in nodes_on_fire:
             maze2[i[0]][i[1]] = 3
         # print("nodes on fire --->" + str(nodes_on_fire))
@@ -134,10 +144,10 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
             # print("Death by fire")
             maze2[step[0]][step[1]] = 4
             nodes_on_fire.remove(step)
-            return False, 0
-
-
-# display(maze2, size2)
+            break
+    if dsflag:
+        display(maze2, size2)
+    return success2, totaltime2
 
 
 # realistically intelligent
@@ -145,10 +155,11 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q):
 # Agent follows the searched path and senses the neighbors for fire of every node of the path to take each step
 # If the neighbor of the shortest path nodes are or fire or the path nodes are on fire it recomputes a
 # different path
-# 'f1' is the starting point of fire
+# 'f3' is the starting point of fire
+# 'q3' is falaimability
+# 'dsflag' this is display flag to diplay mazes if required
 # Using Bidirectional BFS to find the shortest path from Algorithm class
-def sol3(maze3, size3, graph3, src3, dest3, f3, q):
-    start3 = t.datetime.now()
+def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
 
     def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
         currentnode = st
@@ -170,72 +181,53 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q):
                             return True
         return False
 
+    start3 = t.datetime.now()
+    success3 = False
+    totaltime3 = 0
     result3 = al.bibfs(graph3, src3, dest3)
-    # print(result3)
-    maze3[0][0] = 2  # explaination
-    maze3[size3 - 1][size3 - 1] = 5
+    maze3[0][0] = 2                                         # mark starting point
+    maze3[size3 - 1][size3 - 1] = 5                         # mark ending point
     nodes_on_fire = []
-    if result3[0] == "S" and fireStart is not None:
-        maze3[fireStart[0]][fireStart[1]] = 3
-        nodes_on_fire.append(f3)
-        prevnode = src3
-        # result3[2].pop(0)
-        while True:
-            # print(prevnode)
+    maze3[fireStart[0]][fireStart[1]] = 3
+    nodes_on_fire.append(f3)
+    prevnode = src3
+    while True:
+        # print(prevnode)
+        step = result3[2].pop(1)
+        # print("Suggest step ->" + str(step))
+        if step == dest3:
+            #  print("Success")
+            success3 = True
+            totaltime3 = (t.datetime.now() - start3).microseconds
+            break
+        ff = set([])
+        check = feelthefire(graph3, prevnode, nodes_on_fire, 3)
+        # print(check)
+        if check:
+            result3 = al.bibfs(mz.create_graph(maze3), prevnode, dest3)
+            # print("changed path")
+            # print(result3)
+            if not result3[2]:
+                # print("Death by trap")
+                break
+            # print(result3[2])
             step = result3[2].pop(1)
-            # print("Suggest step ->" + str(step))
-            if step == dest3:
-                #  print("Success")
-                return True, (t.datetime.now() - start3).microseconds
-            ff = set([])
-            check = feelthefire(graph3, prevnode, nodes_on_fire, 3)
-            # print(check)
-            if check:
-                result3 = al.bibfs(mz.create_graph(maze3), prevnode, dest3)
-                # print("changed path")
-                # print(result3)
-                if not result3[2]:
-                    # print("Death by trap")
-                    return False, 0
-                # print(result3[2])
-                step = result3[2].pop(1)
-            prevnode = step
-            # print("Step Taken---->" + str(step))
-            maze3[step[0]][step[1]] = 2
-            spread_fire(graph3, nodes_on_fire, q, src3, dest3)
-            for i in nodes_on_fire:
-                maze3[i[0]][i[1]] = 3
-            # print("nodes on fire --->" + str(nodes_on_fire))
-            if step in nodes_on_fire:
-                # print("Death by fire")
-                maze3[step[0]][step[1]] = 4
-                nodes_on_fire.remove(step)
-                return False, 0
-    # display(maze3, size3)
+        prevnode = step
+        # print("Step Taken---->" + str(step))
+        maze3[step[0]][step[1]] = 2
+        spread_fire(graph3, nodes_on_fire, q3, src3, dest3)
+        for i in nodes_on_fire:
+            maze3[i[0]][i[1]] = 3
+        # print("nodes on fire --->" + str(nodes_on_fire))
+        if step in nodes_on_fire:
+            # print("Death by fire")
+            maze3[step[0]][step[1]] = 4
+            nodes_on_fire.remove(step)
+            break
 
-
-# s = 5  # MaxDepth
-# sr = (0, 0)  # Starting node
-# des = (s - 1, s - 1)  # Destination
-# m1 = mz.create_maze(s, 0.2)  # Create maze function
-# gr1 = mz.create_graph(m1)  # Then create graph
-# # m2 = m1.copy()               # maze
-# # gr2 = gr1.copy()               # graph
-# m3 = m1.copy()  # maze
-# gr3 = gr1.copy()  # graph
-# fn = let_there_be_fire(gr1, sr, des)  # initializes fire
-# # print("Fire Starts at" + str(fn))
-# # print("User Starts at" + str(sr))
-# # # Solution 1
-# # print("SOL1")
-# # sol1(m1, s, gr1, sr, des, fn)            # m1 and gr1 used
-# # # Solution 2
-# # print("SOL2")
-# # sol2(m2, s, gr2, sr, des, fn)            # m2 and gr2 used
-# # # Solution 1
-# print("SOL3")
-# sol3(m3, s, gr3, sr, des, fn, 0.1)  # m3 and gr3 used
-# plt.show()
+    if dsflag:
+        display(maze3, size3)
+    return success3, totaltime3
 
 
 resultstore = {}
@@ -265,25 +257,25 @@ for inter in range(0, 2):
                 print(counter)
                 # Solution 1
                 print("SOL1")
-                result1 = sol1(m1, s, gr1, sr, des, fireStart, q)  # m1 and gr1 used
-                if result1[0]:
+                rs1 = sol1(m1, s, gr1, sr, des, fireStart, q)  # m1 and gr1 used
+                if rs1[0]:
                     successcount1 += 1
-                    timetakenS1.append(result1[1])
+                    timetakenS1.append(rs1[1])
                 # print(t1)
 
                 # Solution 2
                 print("SOL2")
-                result2 = sol2(m2, s, gr2, sr, des, fireStart, q)  # m2 and gr2 used
-                if result2[0]:
+                rs2 = sol2(m2, s, gr2, sr, des, fireStart, q)  # m2 and gr2 used
+                if rs2[0]:
                     successcount2 += 1
-                    timetakenS2.append(result2[1])
+                    timetakenS2.append(rs2[1])
                 # print(t2)
                 # Solution 3
                 print("SOL3")
-                result3 = sol3(m3, s, gr3, sr, des, fireStart, q)  # m3 and gr3 used
-                if result3[0]:
+                rs3 = sol3(m3, s, gr3, sr, des, fireStart, q)  # m3 and gr3 used
+                if rs3[0]:
                     successcount3 += 1
-                    timetakenS3.append(result3[1])
+                    timetakenS3.append(rs3[1])
                 # print(t3)
                 counter += 1
 
