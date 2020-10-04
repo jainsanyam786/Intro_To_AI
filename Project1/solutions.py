@@ -205,12 +205,12 @@ def generate_result():
         s = 70  # Selected Maze size
         sr = (0, 0)
         des = (s - 1, s - 1)
+        print("Moving............")
         result = {}
         for q in flamabilityList:
             successcount1, successcount2, successcount3 = 0, 0, 0
             timetakenS1, timetakenS2, timetakenS3 = [], [], []
             counter = 0
-
             while counter < 10:  # Total 10 iterations
                 m1 = mz.create_maze(s, 0.3)  # Create maze function
                 gr1 = mz.create_graph(m1)  # Then create graph
@@ -256,7 +256,7 @@ def generate_result():
 
 
 def generate_sample():
-    flamability = 0.8
+    flamability = 0.3
     s = 10  # Selected Maze size
     sr = (0, 0)
     des = (s - 1, s - 1)
@@ -284,9 +284,9 @@ def generate_sample():
 
 
 # generate_result()
-generate_result()
+#generate_result()
 
 # Generating samples
-# generate_sample()
+generate_sample()
 
-# plt.show()
+plt.show()
