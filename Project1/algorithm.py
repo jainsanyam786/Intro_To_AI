@@ -29,7 +29,6 @@ def bfs(graph, src, dest):
             return ["S", node, path, timetaken]
         # get neighbors
         neighbors = graph.get(node)
-        # print(node, "->", neighbors)
         for neighbor in neighbors:
             if neighbor not in visited and neighbor not in queue:
                 # visit neighbors and add to queue
@@ -104,12 +103,10 @@ def callidfs(graph, src, des):
             path = {}
             sol = idfs(graph, src, des, j)
             if sol:
-                # print(get_path(path, src, des))
                 timetaken = (t.datetime.now() - start_time).microseconds
                 return ["S", des, get_path(path, src, des), timetaken]
 
     except RecursionError:
-        # print("Error")
         timetaken = (t.datetime.now() - start_time).microseconds
         return ["F", None, [], timetaken]
     timetaken = (t.datetime.now() - start_time).microseconds
@@ -118,8 +115,6 @@ def callidfs(graph, src, des):
 
 # Bidirectional Breadth First Search, Source and Destination with the created graph is passed as arguments
 # 2 queues are used to travel from source and destination and to find the common link in between
-
-
 # Bidirectional BFS
 # Mainting 2 queues, 1 for start point path and another for end point path
 # timetaken is registered
@@ -132,8 +127,8 @@ def bibfs(graph, src, dest):
     # queue for implementing BFS; add src node to the queue
     f_queue, b_queue = [src], [dest]
 
-    fpath = {}
-    bpath = {}
+    fpath = {}                          # Forward path
+    bpath = {}                          # Backward path
     if src == dest:
         timetaken = (t.datetime.now() - start_time).microseconds
         return ["S", dest, path[dest], timetaken]

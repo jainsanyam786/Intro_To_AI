@@ -37,9 +37,6 @@ def spread_fire(graph, onfire, flamability, a, b):
                     onfire.append(node)  # adding the new nodes on fire to the previous fire node list
 
 
-# Function helps to sense the fire till required depth
-# Used in Solution 3
-
 # foolhardy
 # Solution 1
 # Agent follows the searched path without changing or recomputing it.
@@ -50,29 +47,26 @@ def spread_fire(graph, onfire, flamability, a, b):
 def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
     start1 = t.datetime.now()
     result1 = al.bibfs(graph1, src1, dest1)
-    maze1[0][0] = 2
-    maze1[size1 - 1][size1 - 1] = 5
+    maze1[0][0] = 2                                   # mark starting point
+    maze1[size1 - 1][size1 - 1] = 5                   # mark ending point
     nodes_on_fire = []
     maze1[f1[0]][f1[1]] = 3
     nodes_on_fire.append(f1)
-    # print(result1[2][0])
     result1[2].pop(0)
     for i in range(len(result1[2])):
         step1 = result1[2].pop(0)
         maze1[step1[0]][step1[1]] = 2
-        if step1 == dest1:
+        if step1 == dest1:                          # If step is equal to destination
             if dsflag:
                 vis.display_maze_onfire(maze1, size1, q1, "SOLUTION 1")
             return True, (t.datetime.now() - start1).microseconds
         spread_fire(graph1, nodes_on_fire, q1, src1, dest1)
-        # print("nodes on fire --->" + str(nodes_on_fire))
         for j in nodes_on_fire:
             maze1[j[0]][j[1]] = 3
         if step1 in nodes_on_fire:
-            # print("Death by fire")
             maze1[step1[0]][step1[1]] = 4
             nodes_on_fire.remove(step1)
-            if dsflag:
+            if dsflag:                       # This is display flag to display mazes if required
                 vis.display_maze_onfire(maze1, size1, q1, "SOLUTION 1")
             return False, 0
 
@@ -82,13 +76,13 @@ def sol1(maze1, size1, graph1, src1, dest1, f1, q1, dsflag):
 # Agent follows the searched path and changes path by recomputing.
 # Recomputing takes places when any of the given path node is on fire
 # 'f2' is the starting point of fire
-# 'q2' is falaimability
+# 'q2' is flamability
 # 'dsflag' this is display flag to diplay mazes if required
 # Using Bidirectional BFS to find the shortest path from Algorithm class
 def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
     success2 = False
     totaltime2 = 0
-    start2 = t.datetime.now()
+    start2 = t.datetime.now()                     # Noting time
     maze2[0][0] = 2
     maze2[size2 - 1][size2 - 1] = 5
     nodes_on_fire = []
@@ -96,29 +90,23 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
     nodes_on_fire.append(f2)
     step2 = src2
     while True:
-        result2 = al.bibfs(mz.create_graph(maze2), step2, dest2)
+        result2 = al.bibfs(mz.create_graph(maze2), step2, dest2)           # calling bi-bfs to get result
         if not result2[2]:
-            # print("Death by trap")
             break
-        # print(result2[2])
         step2 = result2[2].pop(1)
-        # print(step)
         maze2[step2[0]][step2[1]] = 2
-        if step2 == dest2:
-            # print("Success")
+        if step2 == dest2:                                                 # Checking Destination
             success2 = True
             totaltime2 = (t.datetime.now() - start2).microseconds
             break
         spread_fire(graph2, nodes_on_fire, q2, src2, dest2)
-        for i in nodes_on_fire:
+        for i in nodes_on_fire:                                            # Nodes on fire
             maze2[i[0]][i[1]] = 3
-        # print("nodes on fire --->" + str(nodes_on_fire))
         if step2 in nodes_on_fire:
-            # print("Death by fire")
             maze2[step2[0]][step2[1]] = 4
             nodes_on_fire.remove(step2)
             break
-    if dsflag:
+    if dsflag:                                                     # This is display flag to display mazes if required
         vis.display_maze_onfire(maze2, size2, q2, "SOLUTION 2")
     return success2, totaltime2
 
@@ -135,10 +123,7 @@ def sol2(maze2, size2, graph2, src2, dest2, f2, q2, dsflag):
 def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
     def feelthefire(gr, st, fire, level):  # gr =  graph, src = source, fire = nodes on fire, level = depth
         currentnode = st
-        # print(level)
-        # print(currentnode)
         if currentnode in fire:
-            # print(currentnode)
             return True
 
         # If reached the maximum depth, stop recursing.
@@ -171,8 +156,7 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
             totaltime3 = (t.datetime.now() - start3).microseconds
             break
         ff = set([])
-        check = feelthefire(graph3, prevnode, nodes_on_fire, 3)
-        # print(check)
+        check = feelthefire(graph3, prevnode, nodes_on_fire, 3)         # CHeck if there is fire
         if check:
             result3 = al.bibfs(mz.create_graph(maze3), prevnode, dest3)
             if not result3[2]:
@@ -180,11 +164,10 @@ def sol3(maze3, size3, graph3, src3, dest3, f3, q3, dsflag):
             step3 = result3[2].pop(1)
         prevnode = step3
         maze3[step3[0]][step3[1]] = 2
-        spread_fire(graph3, nodes_on_fire, q3, src3, dest3)
+        spread_fire(graph3, nodes_on_fire, q3, src3, dest3)                # Spread fire calling
         for i in nodes_on_fire:
             maze3[i[0]][i[1]] = 3
         if step3 in nodes_on_fire:
-            # print("Death by fire")
             maze3[step3[0]][step3[1]] = 4
             break
 
@@ -198,7 +181,7 @@ def generate_result():
     resultstore = {}
     timelist = ["Totaltimetaken_Sol_1", "Totaltimetaken_Sol_2", "Totaltimetaken_Sol_3"]
     timetitle = "Flamability vs Average Time Taken"
-    succestitle = "Flamability vs Average Number of Sucess"
+    succestitle = "Flamability vs Average Number of Success"
     successratelist = ["TotalSuccessRate_Sol_1", "TotalSuccessRate_Sol_2", "TotalSuccessRate_Sol_3"]
     for inter in range(0, 2):
         flamabilityList = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
@@ -254,7 +237,7 @@ def generate_result():
         vis.disp_graph_maze_onfire(result, flamabilityList, "Flamability", "Time Taken (micro sec)", timetitle,
                                    timelist)
 
-
+# Generating sample mazes for specific flamability and sizes
 def generate_sample():
     flamability = 0.3
     s = 10  # Selected Maze size
@@ -280,6 +263,7 @@ def generate_sample():
             sol3(m3, s, gr3, sr, des, fire_St, flamability, True)  # m3 and gr3 used
             num = 1
 
+    # Show maze
     plt.show()
 
 

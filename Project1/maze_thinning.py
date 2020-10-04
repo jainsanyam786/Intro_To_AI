@@ -26,7 +26,7 @@ class PriorityQueue(object):
     def add(self, item, priority):
         self.pqueue.append((item, priority))
 
-    # for popping an element based on Priority (minimum priority is poped)
+    # for popping an element based on Priority (minimum priority is popped)
     def popmin(self):
         try:
             mini = 0
@@ -68,7 +68,7 @@ def astar(graph, src, dest, option):
         currentnode = nodequeue.popmin()
         if currentnode == dest:
             timetaken = (t.datetime.now() - start_time).microseconds
-            path = al.get_path(path, src, dest)
+            path = al.get_path(path, src, dest)                         # calling to get the path, algorithm.py
             return "S", currentnode, path, timetaken, nodes_expended, len(path)
         # fetch the neighbour of current node
         for neigh in graph.get(currentnode):  # Finding neighbors
@@ -104,7 +104,7 @@ def astarthinning(thinnedgraph, graph, src1, dest1):
         nodes_expended1 += 1
         currentnode1 = nodequeue1.popmin()
         if currentnode1 == dest1:
-            path1 = al.get_path(path1, src1, dest1)
+            path1 = al.get_path(path1, src1, dest1)                  # getting path from algorithm.py
             timetaken1 = (t.datetime.now() - start_time1).microseconds
             return "S", currentnode1, path1, timetaken1, nodes_expended1, len(path1)
         # fetch the neighbour of current node
@@ -156,24 +156,26 @@ def astardiagonal(diagonalgraph, graph, src2, dest2):
     return "F", None, [], timetaken2, nodes_expended2
 
 
+# Function used to generate thin maze with certain probability described in it
 def genrate_thinmaze():
     size = 20
     prob = 0.3
     thinninglist = [0.2, 0.4, 0.6, 0.8]
-    maze = mz.create_maze(size, prob)
+    maze = mz.create_maze(size, prob)                 # Extracting maze
     original_maze = maze.copy()
     vis.display_maze(original_maze, size, "Maze with size " + str(size) + " and probability of " + str(prob))
     for thin in thinninglist:
-        thined_maze = mz.maze_thinning(thin, maze)
+        thined_maze = mz.maze_thinning(thin, maze)         # Maze thinned
         vis.display_maze(thined_maze, size, "Maze with size " + str(size) + " and probability of " + str(prob)
                          + " :thinned by factor " + str(thin))
 
 
+# FUnction is used to select the size of the maze
 def select_maze_size():
     result = {}
     for size in range(30, 80, 10):
         print("Moving..........")
-        time = []
+        time = []                         # Time array to append time of each solutions
         count = 0
         total_nodes = []
         nodes_Expended = []
@@ -181,7 +183,7 @@ def select_maze_size():
             ma = mz.create_maze(size, 0.3)
             gr = mz.create_graph(ma)
             total_nodes.append(len(gr.keys()))
-            answer = astar(gr, (0, 0), (size - 1, size - 1), "M")
+            answer = astar(gr, (0, 0), (size - 1, size - 1), "M")            # A star method
             if answer[0] == "S":
                 count += 1
             time.append(answer[3])
@@ -195,29 +197,36 @@ def select_maze_size():
     vis.dispdata(result, "Successcount", list(result.keys()), "Average_time(microsec) vs successcout 100 iteration")
 
 
-#Method to generate result
+# Method to generate result
+# This function includes Astar Manhattan, Astar Euclidean, Astar Thinning, Astar diagonal
+# Running for 100 iterations
 def generate_result():
     # Thinning list
-    thinninglist = [0.2, 0.4, 0.6, 0.8]
-    size = 50
-    result = {}
+    thinninglist = [0.2, 0.4, 0.6, 0.8]       # Thinning probability
+    size = 50                                 # Size of maze
+    result = {}                               # Dictionary to store results
     for thin in thinninglist:
         print("Moving..........")
-        time_m = []
+
+        time_m = []                           # Time initialization
         time_e = []
         time_thin = []
         time_diagonal = []
-        successcount = 0
+
+        successcount = 0                      # Initialized success rate count
         total_nodes = []
-        nodes_expended_m = []
+
+        nodes_expended_m = []                 # Nodes initialization
         nodes_expended_e = []
         nodes_expended_thin = []
         nodes_expended_diagonal = []
-        path_length_m = []
+
+        path_length_m = []                    # Path initialization
         path_length_e = []
         path_length_thin = []
         path_length_diagonal = []
-        for i in range(0, 100):
+
+        for i in range(0, 100):               # Running for 100 iterations
             maze = mz.create_maze(size, 0.3)
             original_maze = maze.copy()
             thined_maze = mz.maze_thinning(thin, maze)
@@ -225,24 +234,30 @@ def generate_result():
             thined_graph = mz.create_graph(thined_maze)
             diagonal_graph = mz.create_relaxedgraph(original_maze)
             total_nodes.append(len(original_graph.keys()))
+
             answer1 = astar(original_graph, (0, 0), (size - 1, size - 1), "M")
             answer2 = astar(original_graph, (0, 0), (size - 1, size - 1), "E")
             answer3 = astarthinning(thined_graph, original_graph, (0, 0), (size - 1, size - 1))
             answer4 = astardiagonal(diagonal_graph, original_graph, (0, 0), (size - 1, size - 1))
+
             if answer1[0] == "S":
                 successcount += 1
+
                 time_m.append(answer1[3])
                 time_e.append(answer2[3])
                 time_thin.append(answer3[3])
                 time_diagonal.append(answer4[3])
+
                 nodes_expended_m.append(answer1[4])
                 nodes_expended_e.append(answer2[4])
                 nodes_expended_thin.append(answer3[4])
                 nodes_expended_diagonal.append(answer4[4])
+
                 path_length_m.append(answer1[5])
                 path_length_e.append(answer2[5])
                 path_length_thin.append(answer3[5])
                 path_length_diagonal.append(answer4[5])
+
         result[thin] = {"M": {"Average_time(microsec)": (st.mean(time_m) if len(time_m) > 0 else 0),
                               "Average_nodes_expended": (st.mean(nodes_expended_m) if len(nodes_expended_m) > 0 else 0),
                               "Average_path_length": st.mean(path_length_m) if len(path_length_m) > 0 else 0},
@@ -263,6 +278,7 @@ def generate_result():
                         }
     print(result)
 
+    # Passing nodes,Thinning factor to get graphs from below function calls
     vis.disp_data(result, "Average_nodes_expended", "Thinning Factor", "Average Node Expended", "Average Node Expended vs "
               + "Thinning Factor")
     vis.disp_data(result, "Average_path_length", "Thinning Factor", "Average Path Length", "Average Path Length vs "
@@ -277,6 +293,5 @@ def generate_result():
 
 
 generate_result()
-# genrate_thinmaze()
-# select_maze_size()
+
 plt.show()
