@@ -76,7 +76,16 @@ class MineSweeper1(object):
         return neigh
 
     def getmines(self):
-        return math.floor(0.25 * (self.size ** 2))
+        if self.size < 20:
+            return math.floor(0.25 * (self.size ** 2))
+        elif 20 <= self.size < 40:
+            return math.floor(0.30 * (self.size ** 2))
+        elif 40 <= self.size < 60:
+            return math.floor(0.35 * (self.size ** 2))
+        elif 60 <= self.size < 100:
+            return math.floor(0.40 * (self.size ** 2))
+        else:
+            return math.floor(0.50 * (self.size ** 2))
 
     def updateinformation(self):
         for (x, y) in (self.cells - self.mines_busted - self.flagged):
@@ -152,9 +161,10 @@ class MineSweeperPlay(MineSweeper1):
             row, column = xy
             # expand button to North, East, West, South
             button.grid(row=row, column=column, sticky="news")
-            # We want the buttons to be square, with fixed size.
-            table.grid_columnconfigure(column, minsize=50)
-            table.grid_rowconfigure(row, minsize=50)
+
+            scale = math.floor(50 // (1 if self.size // 10 == 0 else self.size // 10))
+            table.grid_columnconfigure(column, minsize=scale)
+            table.grid_rowconfigure(row, minsize=scale)
             # needed to restore bg to default when unflagging
             self.refresh(xy, squares)
 
