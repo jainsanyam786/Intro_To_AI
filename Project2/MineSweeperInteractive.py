@@ -81,7 +81,7 @@ class MineSweeperInteractive(object):
         """
         trippedmines = len(self.mines_busted)
         if trippedmines:
-            self.message("You finished with %s tripped  mines." % trippedmines)
+            self.message("You finished with %s tripped mines. Total mines were %s" %(trippedmines, len(self._mines)))
         else:
             self.message("You won without tripping any mines :-)")
 
