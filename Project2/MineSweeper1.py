@@ -11,17 +11,19 @@ sys.setrecursionlimit(100000)
 
 class MineSweeper1(object):
     """
+    sets up the basic minesweeper board.
     """
 
+    # initialization of the minesweeper board
     def __init__(self, size, mode):
         self.size = size
         self.mode = mode
-        # Create minesweeper borad
+        # Creates the minesweeper board
         self.cells = set((x, y)
                          for x in range(self.size)
                          for y in range(self.size))
 
-        # setting mines
+        # setting up the mines in the board
         mines_number = self.getmines()
         self._mines = set()
         while len(self._mines) < mines_number:
@@ -30,52 +32,61 @@ class MineSweeper1(object):
 
         # For each square, gives the set of its neighbours
         # ni = not identified
-        # neighbours =  number of neighbour
-        self.data = {}
-        for (x, y) in self.cells:
+        # neighbours =  number of neighbours for the cell
+        self.data = {}  # data to keep track of required parameters
+        for (x, y) in self.cells:  # for all the cells in the board, get their neighbors and update each cell's data
             neighbour = self.getneighbour(x, y)
             self.data[x, y] = {"neighbour": neighbour, "neighbours": len(neighbour), "status": "C", "clue": "ni"}
         # Environment data:
-        self.empty_remaining = size * size - mines_number
-        # Mantain list of open cells.
+        self.empty_remaining = size * size - mines_number  # number of non-mines
+        # Maintain list of open cells.
         self.opened = set()
         # flagged the identified mine.
         self.flagged = set()
         # Mantain list of safe cells to generate hints.
         self.safe = []
         # mines_near[xy] will be populated when you open xy.
-        # It it was a mine, it will be 'mine' instead of a number.
+        # If it was a mine, it will be 'mine' instead of a number.
         self.mines_busted = set()
 
     def open(self, xy):
         """
+        function to open the cells in the board and update whether it is a mine (M) or safe (S)
         """
         if xy in self.opened:
             return
 
         self.opened.add(xy)
         if xy in self._mines:
-            self.mines_busted.add(xy)
-            self.data.get(xy)["status"] = "M"
+            self.mines_busted.add(xy)  # if the opened cell is a mine, add to the busted mines list
+            self.data.get(xy)["status"] = "M"  # and update its status
         else:
             # Updating the clue
-            self.data.get(xy)["status"] = "S"
+            self.data.get(xy)["status"] = "S"  # otherwise update status as safe
             self.data.get(xy)["clue"] = len(self.data[xy].get("neighbour") & self._mines)
-            self.flagged.discard(xy)
-            self.empty_remaining -= 1
+            self.flagged.discard(xy)  # remove the cell from the flagged list, since there's no way it can be a mine now
+            self.empty_remaining -= 1  # decrease number of non-mines by 1
             if self.empty_remaining <= 0 and self.mode == "T":
                 self.win()
 
     def flag(self, xy):
-        """"""
+        """
+        function to flag (mark) the cell denoted by xy
+        """
         self.flagged.add(xy)
 
     def getneighbour(self, x, y):
+        """
+        returns the neighbors for the cell (x, y)
+        """
         neigh = set((nx, ny) for nx in [x - 1, x, x + 1] for ny in [y - 1, y, y + 1] if (nx, ny) != (x, y) if
                     (nx, ny) in self.cells)
         return neigh
 
     def getmines(self):
+        """
+        returns the number of mines based on the size of the minesweeper board
+        """
         if self.size < 20:
             return math.floor(0.25 * (self.size ** 2))
         elif 20 <= self.size < 40:
@@ -88,8 +99,12 @@ class MineSweeper1(object):
             return math.floor(0.50 * (self.size ** 2))
 
     def updateinformation(self):
+        """
+        updates the information for the cells in the board
+        """
+        # for all the cells in the board except the busted mines and flagged cells
         for (x, y) in (self.cells - self.mines_busted - self.flagged):
-            if self.data.get((x, y)).get("clue") != "ni":
+            if self.data.get((x, y)).get("clue") != "ni":  # if the clue for the cell is not ni (not identified)
                 hidden = 0
                 hiddenlist = set()
                 safe = 0
@@ -100,11 +115,11 @@ class MineSweeper1(object):
                     if self.data.get(n).get("status") == "C":
                         hidden += 1
                         hiddenlist.add(n)
-                    elif self.data.get(n).get("status") == "S":
-                        safe += 1
+                    elif self.data.get(n).get("status") == "S":  # if the status of the cell is safe, add to safelist
+                        safe += 1   # update no of safe cells
                         safelist.add(n)
-                    elif self.data.get(n).get("status") == "M":
-                        mine += 1
+                    elif self.data.get(n).get("status") == "M":   # if the cell is a mine, add to minelist
+                        mine += 1   # update no of mines detected
                         minelist.add(n)
                 if self.data.get((x, y)).get("clue") - mine == hidden:
                     for sn in hiddenlist:
@@ -118,17 +133,22 @@ class MineSweeper1(object):
         return self.generatehint()
 
     def generatehint(self):
-        if self.safe:
-            step = self.safe.pop(0)
+        """
+        function to generate a hint for the game to proceed
+        """
+        if self.safe:   # if safe
+            step = self.safe.pop(0)  # remove the first element from the list
             rand = 0
         else:
-            permittedsteps = self.cells - self.opened - self.flagged
-            step = random.choice(list(permittedsteps))
+            permittedsteps = self.cells - self.opened - self.flagged    # get remaining cells excluding the opened and flagged cells
+            step = random.choice(list(permittedsteps))      # from these cells, choose one randomly
             rand = 1
         return step, rand
 
     def win(self):
-        """"""
+        """
+        prints the status of number of mines detected
+        """
         if self.mines_busted:
             print("You finished with %s tripped  mines :: Total numbers of mine were %s"
                   % (len(self.mines_busted), len(self._mines)))
@@ -138,19 +158,27 @@ class MineSweeper1(object):
 
 class MineSweeperPlay(MineSweeper1):
     """
+    Play the Minesweeper game!
+    MineSweeperPlay is an inherited class from MineSweeper1
     """
 
     def __init__(self, *args, **kw):
-        MineSweeper1.__init__(self, *args, **kw)
+        MineSweeper1.__init__(self, *args, **kw)    # use the __init__ function from the above class to create the board
 
     def letsplay(self):
+        """
+        plays the game; starts timer and runs until all cells are opened and returns the time taken in microseconds
+        """
         start_time = t.datetime.now()  # Noting time taken to complete
-        while self.empty_remaining > 0:
+        while self.empty_remaining > 0: # until all cells are opened
             step, rand = self.updateinformation()
             self.open(step)
         return len(self._mines), len(self.flagged), len(self.mines_busted), (t.datetime.now() - start_time).microseconds
 
     def display(self):
+        """
+        displays the GUI for the game, using the Tkinter library
+        """
         window = tk.Tk()
         table = tk.Frame(window)
         table.pack()
@@ -175,7 +203,9 @@ class MineSweeperPlay(MineSweeper1):
         window.mainloop()
 
     def refresh(self, xy, squares):
-        """Update GUI for given square."""
+        """
+        Update the GUI for given square
+        """
         button = squares[xy]
 
         text, fg, bg = self.getvisualdataforcell(xy)
@@ -185,7 +215,9 @@ class MineSweeperPlay(MineSweeper1):
             button.config(relief=tk.SUNKEN)
 
     def getvisualdataforcell(self, xy):
-        """"""
+        """
+        depending on whether the opened cell is safe or a mine, display the corresponding icon on the cell
+        """
         if xy in self.opened:
             if xy in self._mines:
                 return u'\N{SKULL AND CROSSBONES}', None, 'red'

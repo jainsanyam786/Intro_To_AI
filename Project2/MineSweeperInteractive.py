@@ -14,7 +14,7 @@ class MineSweeperInteractive(object):
     def __init__(self, size):
         self.size = size
 
-        # Create minesweeper borad
+        # Create minesweeper board
         self.cells = set((x, y)
                          for x in range(self.size)
                          for y in range(self.size))
@@ -52,28 +52,33 @@ class MineSweeperInteractive(object):
 
     def open(self, xy):
         """
+        Opens the cell xy and checks if it is a mine or safe
         """
         if xy in self.opened:
             return
 
-        self.opened.add(xy)
-        if xy in self._mines:
+        self.opened.add(xy)     # add to the list of opened cells
+        if xy in self._mines:       # if mine, update status to M
             self.mines_busted.add(xy)
             self.data.get(xy)["status"] = "M"
         else:
             # Updating the clue
-            self.data.get(xy)["status"] = "S"
+            self.data.get(xy)["status"] = "S"   # otherwise update status to S
             self.data.get(xy)["clue"] = len(self.data[xy].get("neighbour") & self._mines)
             self.empty_remaining -= 1
             if self.empty_remaining <= 0:
                 self.win()
 
     def flag(self, xy):
-        """"""
+        """
+        Flags the cell xy
+        """
         self.flagged.add(xy)
 
     def win(self):
-        """"""
+        """
+        Display number of mines tripped (busted)
+        """
         trippedmines = len(self.mines_busted)
         if trippedmines:
             self.message("You finished with %s tripped  mines." % trippedmines)
@@ -81,11 +86,17 @@ class MineSweeperInteractive(object):
             self.message("You won without tripping any mines :-)")
 
     def getneighbour(self, x, y):
+        """
+        returns list of neighbors for the cell (x, y)
+        """
         neigh = set((nx, ny) for nx in [x - 1, x, x + 1] for ny in [y - 1, y, y + 1] if (nx, ny) != (x, y) if
                     (nx, ny) in self.cells)
         return neigh
 
     def getmines(self):
+        """
+        returns number of mines based on the size of the maze
+        """
         if self.size < 20:
             return math.floor(0.25 * (self.size ** 2))
         elif 20 <= self.size < 40:
@@ -98,8 +109,12 @@ class MineSweeperInteractive(object):
             return math.floor(0.50 * (self.size ** 2))
 
     def updateinformation(self):
+        """
+        updates the information for the cells in the board
+        """
+        # for all the cells in the board except the busted mines and flagged cells
         for (x, y) in (self.cells - self.mines_busted - self.flagged):
-            if self.data.get((x, y)).get("clue") != "ni":
+            if self.data.get((x, y)).get("clue") != "ni":    # if the clue for the cell is not ni (not identified)
                 hidden = 0
                 hiddenlist = set()
                 safe = 0
@@ -110,11 +125,11 @@ class MineSweeperInteractive(object):
                     if self.data.get(n).get("status") == "C":
                         hidden += 1
                         hiddenlist.add(n)
-                    elif self.data.get(n).get("status") == "S":
-                        safe += 1
+                    elif self.data.get(n).get("status") == "S":     # if the status of the cell is safe, add to safelist
+                        safe += 1   # update number of safe cells
                         safelist.add(n)
-                    elif self.data.get(n).get("status") == "M":
-                        mine += 1
+                    elif self.data.get(n).get("status") == "M":     # if the cell is a mine, add to minelist
+                        mine += 1   # update number of mines detected
                         minelist.add(n)
                 if self.data.get((x, y)).get("clue") - mine == hidden:
                     for sn in hiddenlist:
@@ -128,12 +143,15 @@ class MineSweeperInteractive(object):
         return self.generatehint()
 
     def generatehint(self):
-        if self.safe:
-            step = self.safe.pop(0)
+        """
+        function to generate a hint for the game to proceed
+        """
+        if self.safe:    # if safe
+            step = self.safe.pop(0)     # remove the first element from the safe list
             rand = 0
         else:
-            permittedsteps = self.cells - self.opened - self.flagged
-            step = random.choice(list(permittedsteps))
+            permittedsteps = self.cells - self.opened - self.flagged    # get remaining cells excluding the opened and flagged cells
+            step = random.choice(list(permittedsteps))      # from these cells, choose one randomly
             rand = 1
         self.suggestedstep = (step, rand)
         return step, rand
