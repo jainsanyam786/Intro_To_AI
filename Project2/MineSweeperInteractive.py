@@ -9,8 +9,9 @@ sys.setrecursionlimit(100000)
 
 class MineSweeperInteractive(object):
     """
+    In this class, Actual computation and minesweeper generation takes place
     """
-
+    # Constructor with 1 argument, size of minesweeper
     def __init__(self, size):
         self.size = size
 
@@ -19,27 +20,31 @@ class MineSweeperInteractive(object):
                          for x in range(self.size)
                          for y in range(self.size))
 
-        # setting mines
+        # Getting Number of mines
         mines_number = self.getmines()
         self._mines = set()
+        # Setting mines at random location
         while len(self._mines) < mines_number:
             self._mines.add((random.randrange(size),
                              random.randrange(size)))
 
         # For each square, gives the set of its neighbours
         # ni = not identified
-        # neighbours =  number of neighbour
+        # neighbour =  List of neighbors
+        # neighbours =  Length of neighbors
+        # Status = Status of cell(It can be C= Covered, M= Mined, S= Safe)
+        # Clue = Provides Number of mines around specific location
         self.data = {}
         for (x, y) in self.cells:
             neighbour = self.getneighbour(x, y)
             self.data[x, y] = {"neighbour": neighbour, "neighbours": len(neighbour), "status": "C", "clue": "ni"}
         # Environment data:
         self.empty_remaining = size * size - mines_number
-        # Mantain list of open cells.
+        # Maintain list of open cells.
         self.opened = set()
         # flagged the identified mine.
         self.flagged = set()
-        # Mantain list of safe cells to generate hints.
+        # Maintain list of safe cells to generate hints.
         self.safe = []
         # mines_near[xy] will be populated when you open xy.
         # It it was a mine, it will be 'mine' instead of a number.
@@ -52,7 +57,7 @@ class MineSweeperInteractive(object):
 
     def open(self, xy):
         """
-        Opens the cell xy and checks if it is a mine or safe
+        Opens the cell at x, y location and checks if it is a mine or safe
         """
         if xy in self.opened:
             return
@@ -64,8 +69,11 @@ class MineSweeperInteractive(object):
         else:
             # Updating the clue
             self.data.get(xy)["status"] = "S"   # otherwise update status to S
+            # Updating clue based on mines found in neighbors
             self.data.get(xy)["clue"] = len(self.data[xy].get("neighbour") & self._mines)
+            # Reducing the number of empty mines
             self.empty_remaining -= 1
+            # Checking the condition of winning
             if self.empty_remaining <= 0:
                 self.win()
 
@@ -79,6 +87,7 @@ class MineSweeperInteractive(object):
         """
         Display number of mines tripped (busted)
         """
+        # Total number of mines busted by user while playing
         trippedmines = len(self.mines_busted)
         if trippedmines:
             self.message("You finished with %s tripped mines. Total mines were %s" %(trippedmines, len(self._mines)))
@@ -95,7 +104,7 @@ class MineSweeperInteractive(object):
 
     def getmines(self):
         """
-        returns number of mines based on the size of the maze
+        Returns number of mines based on the user input size of the maze
         """
         if self.size < 20:
             return math.floor(0.25 * (self.size ** 2))
@@ -115,12 +124,20 @@ class MineSweeperInteractive(object):
         # for all the cells in the board except the busted mines and flagged cells
         for (x, y) in (self.cells - self.mines_busted - self.flagged):
             if self.data.get((x, y)).get("clue") != "ni":    # if the clue for the cell is not ni (not identified)
+                # Number of hidden cells around x, y
                 hidden = 0
+                # List of hidden cells around x, y
                 hiddenlist = set()
+                # Number of safe cells around x, y
                 safe = 0
+                # List of safe cells around x, y
                 safelist = set()
+                # Number of mine cells around x, y
                 mine = 0
+                # List of mine cells around x, y
                 minelist = set()
+
+                # Iterating over each neighbor of x, y to update the above mentioned list
                 for n in self.data.get((x, y)).get("neighbour"):
                     if self.data.get(n).get("status") == "C":
                         hidden += 1
@@ -131,27 +148,38 @@ class MineSweeperInteractive(object):
                     elif self.data.get(n).get("status") == "M":     # if the cell is a mine, add to minelist
                         mine += 1   # update number of mines detected
                         minelist.add(n)
+                # If total number of remaining mines around x,y equals to total number of hidden cells around x, y
+                # then it implies that all hidden cells around x, y are mines.
                 if self.data.get((x, y)).get("clue") - mine == hidden:
                     for sn in hiddenlist:
                         self.data.get(sn)["status"] = "M"
+                        # Adding identified mines and flagging it
                         self.flag(sn)
+                # If all mines around x,y have been identified, then all the remaining hidden cells around x, y
+                # are safe.
                 elif (self.data.get((x, y)).get("neighbours") - self.data.get((x, y)).get("clue")) - safe == hidden:
                     for sn in hiddenlist:
                         self.data.get(sn)["status"] = "S"
+                        # Adding identified safe cells to the list
                         if sn not in self.opened and sn not in self.safe:
                             self.safe.append(sn)
+        # Based on updated information, calling method to generate hint
         return self.generatehint()
 
     def generatehint(self):
         """
         function to generate a hint for the game to proceed
         """
+        # If safe list is not empty, give first element in safe list as a hint
         if self.safe:    # if safe
             step = self.safe.pop(0)     # remove the first element from the safe list
+            # Marking that this hint is not a random suggestion
             rand = 0
         else:
-            permittedsteps = self.cells - self.opened - self.flagged    # get remaining cells excluding the opened and flagged cells
+            # get remaining cells excluding the opened and flagged cells
+            permittedsteps = self.cells - self.opened - self.flagged
             step = random.choice(list(permittedsteps))      # from these cells, choose one randomly
+            # Marking that this hint is a random suggestion
             rand = 1
         self.suggestedstep = (step, rand)
         return step, rand
@@ -163,23 +191,28 @@ class MineSweeperInteractive(object):
 class MineSweeperInteractiveGUI(MineSweeperInteractive):
     """
     GUI wrapper.
-    Left/right-click calls .open() / flag();
-    calling .open() and .flag() also updates GUI.
+    Left-click calls .open();
+    calling .open() also updates GUI.
     """
 
+    # Constructor
     def __init__(self, *args, **kw):
+        # Calling MAIN CLASS
         MineSweeperInteractive.__init__(self, *args, **kw)
+
+        # Creating window and adding properties
         self.window = tk.Tk()
         self.table = tk.Frame(self.window)
         self.table.pack()
         self.squares = {}
-        # Build buttons
 
+        # Build buttons
         for xy in self.cells:
             self.squares[xy] = button = tk.Button(self.table, padx=0, pady=0)
             row, column = xy
             # expand button to North, East, West, South
             button.grid(row=row, column=column, sticky="news")
+            # Scaling the size of button based on the sie of minesweeper
             scale = math.floor(50 // (1 if self.size // 10 == 0 else self.size // 10))
             self.table.grid_columnconfigure(column, minsize=scale)
             self.table.grid_rowconfigure(row, minsize=scale)
@@ -207,25 +240,31 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         """Update GUI for given square."""
         button = self.squares[xy]
 
+        # Fetching and setting visual data for the cell
         text, fg, bg = self.getvisualdataforcell(xy)
         button.config(text=text, fg=fg, bg=bg)
 
+        # Updating information for button if it is opened
         if xy in self.opened:
             button.config(relief=tk.SUNKEN)
 
+        # Updating window title string to display no of unopened cells to user
         if self.empty_remaining > 0:
             self.message("%d Cells to go" %
                          len(self.cells - self.opened))
 
     def getvisualdataforcell(self, xy):
-        """"""
+        """
+        Fetching Visual data for cell based on its status
+        """
+        # If cell is opened and it is mine, it will be marked as a mine. Else, the clue will be displayed.
         if xy in self.opened:
             if xy in self._mines:
                 return u'\N{SKULL AND CROSSBONES}', None, 'red'
 
             mn = self.data.get(xy).get("clue")
             if mn > 0:
-                # "standard" minesweeper colors (I think?)
+                # Standard minesweeper colors
                 fg = {1: 'blue', 2: 'dark green', 3: 'red',
                       4: 'dark blue', 5: 'dark red',
                       }.get(mn, 'black')
@@ -233,7 +272,8 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
             else:
                 return '0', None, 'white'
 
-        # unopened
+        # Updating information for unopened cells
+        # If game is still ON, flagged cells are updated accordingly. And remaining cells retain their initial config.
         if self.empty_remaining > 0:
             # during play
             if xy in self.flagged:
@@ -241,37 +281,42 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
             else:
                 return ' ', None, self._default_button_bg
         else:
-            # after victory
+            # If game is completed, flag cells are displayed green with flag sign
+            # For remaining cells, they will be just green
             if xy in self.flagged:
                 return u'\N{WHITE FLAG}', None, 'green'
             else:
                 return '', None, 'green'
 
+    # Calling Open method from super class and refreshing the button
     def open(self, xy):
         super(MineSweeperInteractiveGUI, self).open(xy)
         self.refresh(xy)
 
+    # Updating cell information method from super class and refreshing if flagged
     def updateinformation(self):
         step = super(MineSweeperInteractiveGUI, self).updateinformation()
-        for i in self.flagged:
-            self.refresh(i)
         return step
 
+    # Calling Flag method from super class and refreshing the button
     def flag(self, xy):
         super(MineSweeperInteractiveGUI, self).flag(xy)
         self.refresh(xy)
 
+    # Calling Win method from super class and refreshing the button
     def win(self):
         super(MineSweeperInteractiveGUI, self).win()
         # change all unopened mines to victory state
         for xy in self._mines - self.opened:
             self.refresh(xy)
 
+    # Over writing the method from super class
     def message(self, string):
         self.window.title(string)
 
 
 def main(cls):
+    # Generate Starting window to get the size for minesweeper from USER
     root = tk.Tk()
     root.title("Let's Play Minesweeper")
     canvas1 = tk.Canvas(root, width=400, height=200, relief='raised')
@@ -285,17 +330,22 @@ def main(cls):
     entry1 = tk.Entry(root)
     canvas1.create_window(200, 125, window=entry1)
 
+    # Starts game
     def startgame():
         size = int(entry1.get())
         game = cls(size)
         root.destroy()
-        game.window.mainloop()
+        # This is to display game window
+        game.window.mainloop()                               # GAME WINDOW(MINESWEEPER WINDOW)
 
+    # Button with label "Lets Play", which starts the game
     button1 = tk.Button(text='Lets Play', command=startgame, bg='brown', fg='white',
                         font=('helvetica', 9, 'bold'))
     canvas1.create_window(200, 175, window=button1)
-    root.mainloop()
+    # This is to display start window
+    root.mainloop()                                          # WINDOW BEFORE GAME WINDOW STARTS
 
-
+# Starting Point
 if __name__ == '__main__':
+    # Calling GUI of MinesweeperInteractive class
     main(MineSweeperInteractiveGUI)

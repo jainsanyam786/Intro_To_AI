@@ -199,7 +199,7 @@ class MineSweeperPlay(MineSweeper1):
         if self.mines_busted == 0:
             window.title("You won without tripping any mines :-)")
         else:
-            window.title("You finished with %s tripped mines" % len(self.mines_busted))
+            window.title("You finished with %s tripped mines and Total number of mines were %s" % (len(self.mines_busted), len(self._mines)))
         window.mainloop()
 
     def refresh(self, xy, squares):
@@ -258,24 +258,25 @@ def main(cls):
     if "analysis".casefold().__eq__(Mode.casefold()):
         result = {}
         sizes = [30, 40, 50, 60]
+        iter = 5
         print("Generating Data")
         for size in sizes:
             meanmines = 0
             meanflagged = 0
             meanbusted = 0
             meantimetaken = 0
-            for i in range(0, 10):
+            for i in range(0, iter):
                 game = cls(size, "A")
                 tmines, tflagged, tbusted, timetaken = game.letsplay()
                 meanmines += tmines
                 meanflagged += tflagged
                 meanbusted += tbusted
-                meantimetaken += timetaken
-            result[size] = {"meanmines": math.floor(meanmines / 10), "meanflagged": math.floor(meanflagged / 10),
-                            "meanbusted": math.floor(meanbusted / 10), "meantimetaken": math.floor(meantimetaken / 10)}
+                meantimetaken += round(timetaken/(10**3), 4)
+            result[size] = {"meanmines": math.floor(meanmines / iter), "meanflagged": math.floor(meanflagged / iter),
+                            "meanbusted": math.floor(meanbusted / iter), "meantimetaken": math.floor(meantimetaken / iter)}
         print("Ploting Data")
         disp_data(result, ["meanmines", "meanflagged", "meanbusted"], "Sizes", "Numbers", "Size vs efficiency")
-        disp_data(result, ["meantimetaken"], "Sizes", "Time(microseconds)", "Size vs Time taken")
+        disp_data(result, ["meantimetaken"], "Sizes", "Time( MilliSeconds )", "Size vs Time taken")
         plt.show()
     else:
         size = int(input("Enter the size "))
