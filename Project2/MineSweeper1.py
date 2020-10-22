@@ -234,9 +234,9 @@ class MineSweeperPlay(MineSweeper1):
         # if the board is cleared without tripping any mines
         if self.mines_busted == 0:
             window.title("You won without tripping any mines :-)")
-        else:   # otherwise, print number of mines tripped
+        else:  # otherwise, print number of mines tripped
             window.title("You finished with %s tripped mines and Total number of mines were %s" % (
-            len(self.mines_busted), len(self._mines)))
+                len(self.mines_busted), len(self._mines)))
         window.mainloop()
 
     def refresh(self, xy, squares):
@@ -279,6 +279,7 @@ class MineSweeperPlay(MineSweeper1):
         else:
             # display green cell
             return '', None, 'green'
+
 
 def disp_data(data, varnames, xlable, ylabel, title):
     """
@@ -342,7 +343,7 @@ def main(cls):
         disp_data(result, ["meanmines", "meanflagged", "meanbusted"], "Sizes", "Numbers", "Size vs efficiency")
         disp_data(result, ["meantimetaken"], "Sizes", "Time( MilliSeconds )", "Size vs Time taken")
         plt.show()
-    else:       # if the mode is Test
+    else:  # if the mode is Test
         # Ask user for input size
         size = int(input("Enter the size "))
         game = cls(size, "T")

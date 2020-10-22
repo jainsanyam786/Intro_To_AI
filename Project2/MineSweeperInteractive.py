@@ -2,18 +2,21 @@ import random
 import sys
 import tkinter as tk
 import math
+import itertools
 
 # defaults to 1000, recursive AI might need more (e.g. 40x40 game)
 sys.setrecursionlimit(100000)
 
 
-class MineSweeperInteractive(object):
+class MineSweeperInteractive:
     """
     In this class, Actual computation and minesweeper generation takes place
     """
+
     # Constructor with 1 argument, size of minesweeper
-    def __init__(self, size):
+    def __init__(self, size, mode):
         self.size = size
+        self.mode = mode
 
         # Create minesweeper board
         self.cells = set((x, y)
@@ -47,13 +50,11 @@ class MineSweeperInteractive(object):
         # Maintain list of safe cells to generate hints.
         self.safe = []
         # mines_near[xy] will be populated when you open xy.
+        self.solved = set()
         # It it was a mine, it will be 'mine' instead of a number.
         self.mines_busted = set()
         # keeping track of suggestions initialized with 1 signifies it is random
         self.suggestedstep = ((-1, -1), 1)
-
-        # Starting point suggestion
-        print("Start with cell %s " % str(random.choice(list(self.cells))))
 
     def open(self, xy):
         """
@@ -62,13 +63,13 @@ class MineSweeperInteractive(object):
         if xy in self.opened:
             return
 
-        self.opened.add(xy)     # add to the list of opened cells
-        if xy in self._mines:       # if mine, update status to M
+        self.opened.add(xy)  # add to the list of opened cells
+        if xy in self._mines:  # if mine, update status to M
             self.mines_busted.add(xy)
             self.data.get(xy)["status"] = "M"
         else:
             # Updating the clue
-            self.data.get(xy)["status"] = "S"   # otherwise update status to S
+            self.data.get(xy)["status"] = "S"  # otherwise update status to S
             # Updating clue based on mines found in neighbors
             self.data.get(xy)["clue"] = len(self.data[xy].get("neighbour") & self._mines)
             # Reducing the number of empty mines
@@ -90,7 +91,7 @@ class MineSweeperInteractive(object):
         # Total number of mines busted by user while playing
         trippedmines = len(self.mines_busted)
         if trippedmines:
-            self.message("You finished with %s tripped mines. Total mines were %s" %(trippedmines, len(self._mines)))
+            self.message("You finished with %s tripped mines. Total mines were %s" % (trippedmines, len(self._mines)))
         else:
             self.message("You won without tripping any mines :-)")
 
@@ -123,7 +124,7 @@ class MineSweeperInteractive(object):
         """
         # for all the cells in the board except the busted mines and flagged cells
         for (x, y) in (self.cells - self.mines_busted - self.flagged):
-            if self.data.get((x, y)).get("clue") != "ni":    # if the clue for the cell is not ni (not identified)
+            if self.data.get((x, y)).get("clue") != "ni":  # if the clue for the cell is not ni (not identified)
                 # Number of hidden cells around x, y
                 hidden = 0
                 # List of hidden cells around x, y
@@ -142,43 +143,132 @@ class MineSweeperInteractive(object):
                     if self.data.get(n).get("status") == "C":
                         hidden += 1
                         hiddenlist.add(n)
-                    elif self.data.get(n).get("status") == "S":     # if the status of the cell is safe, add to safelist
-                        safe += 1   # update number of safe cells
+                    elif self.data.get(n).get("status") == "S":  # if the status of the cell is safe, add to safelist
+                        safe += 1  # update number of safe cells
                         safelist.add(n)
-                    elif self.data.get(n).get("status") == "M":     # if the cell is a mine, add to minelist
-                        mine += 1   # update number of mines detected
+                    elif self.data.get(n).get("status") == "M":  # if the cell is a mine, add to minelist
+                        mine += 1  # update number of mines detected
                         minelist.add(n)
                 # If total number of remaining mines around x,y equals to total number of hidden cells around x, y
                 # then it implies that all hidden cells around x, y are mines.
-                if self.data.get((x, y)).get("clue") - mine == hidden:
-                    for sn in hiddenlist:
-                        self.data.get(sn)["status"] = "M"
-                        # Adding identified mines and flagging it
-                        self.flag(sn)
-                # If all mines around x,y have been identified, then all the remaining hidden cells around x, y
-                # are safe.
-                elif (self.data.get((x, y)).get("neighbours") - self.data.get((x, y)).get("clue")) - safe == hidden:
-                    for sn in hiddenlist:
-                        self.data.get(sn)["status"] = "S"
-                        # Adding identified safe cells to the list
-                        if sn not in self.opened and sn not in self.safe:
-                            self.safe.append(sn)
+                if hiddenlist:
+                    if self.data.get((x, y)).get("clue") - mine == hidden:
+                        for sn in hiddenlist:
+                            self.data.get(sn)["status"] = "M"
+                            # Adding identified mines and flagging it
+                            self.flag(sn)
+                    # If all mines around x,y have been identified, then all the remaining hidden cells around x, y
+                    # are safe.
+                    elif (self.data.get((x, y)).get("neighbours") - self.data.get((x, y)).get("clue")) - safe == hidden:
+                        for sn in hiddenlist:
+                            self.data.get(sn)["status"] = "S"
+                            # Adding identified safe cells to the list
+                            if sn not in self.opened and sn not in self.safe:
+                                self.safe.append(sn)
+                else:
+                    self.solved.add((x, y))
         # Based on updated information, calling method to generate hint
         return self.generatehint()
+
+    def constraintsolver(self):
+        listconst = self.createconstraint()
+        if listconst:
+            self.trivialcase(listconst)
+            print(listconst)
+            print("safe" + " " + str(self.safe))
+            print("flagged" + " " + str(self.flagged))
+            self.subtractconstraint(listconst)
+            print("after subtract")
+            print("safe" + " " + str(self.safe))
+            print("flagged" + " " + str(self.flagged))
+        return self.generatehint()
+
+    def createconstraint(self):
+        """
+        updates the constraint for the cells in the board
+        """
+        listconst = []
+        # for all the cells in the board except the busted mines and flagged cells
+        for (x, y) in (self.cells - self.mines_busted - self.flagged):
+            if self.data.get((x, y)).get("clue") != "ni":  # if the clue for the cell is not ni (not identified)
+                # List of hidden cells around x, y
+                hiddenlist = set()
+                mine = 0
+                # List of mine cells around x, y
+                # Iterating over each neighbor of x, y to update the above mentioned list
+                for n in self.data.get((x, y)).get("neighbour"):
+                    if self.data.get(n).get("status") == "C":
+                        hiddenlist.add(n)
+                    elif self.data.get(n).get("status") == "M":  # if the cell is a mine, add to minelist
+                        mine += 1  # update number of mines detected
+                if hiddenlist:
+                    listconst.append(
+                        {"const": sorted(list(hiddenlist)), "val": self.data.get((x, y)).get("clue") - mine})
+                else:
+                    self.solved.add((x, y))
+        # Based on updated information, calling method to generate hint
+        print(listconst)
+        return listconst
+
+    def trivialcase(self, lc):
+        trivial = []
+        for c in lc:
+            if len(c.get("const")) == c.get("val"):
+                for i in c.get("const"):
+                    self.data.get(i)["status"] = "M"
+                    self.flag(i)
+                trivial.append(c)
+            elif c.get("val") == 0:
+                for i in c.get("const"):
+                    self.data.get(i)["status"] = "S"
+                    if i not in self.opened and i not in self.safe:
+                        self.safe.append(i)
+                trivial.append(c)
+        [lc.remove(i) for i in trivial]
+
+    def subtractconstraint(self, lc):
+        updatedconst = []
+        for x, y in itertools.combinations(lc, 2):
+            S1 = set(x.get("const"))
+            S2 = set(y.get("const"))
+            if S1.intersection(S2):
+                if x.get("val") > y.get("val"):
+                    self.updateconst(x, y, updatedconst)
+
+                elif x.get("val") < y.get("val"):
+                    self.updateconst(y, x, updatedconst)
+        print(updatedconst)
+        self.trivialcase(updatedconst)
+
+    def updateconst(self, maxs, mins, uc):
+        maxset = set(maxs.get("const"))
+        minset = set(mins.get("const"))
+        pos = []
+        neg = []
+        [pos.append(p) for p in maxset - minset]
+        [neg.append(n) for n in minset - maxset]
+        if len(pos) == maxs.get("val") - mins.get("val"):
+            if sorted(pos) not in uc:
+                uc.append({"const": sorted(pos), "val": maxs.get("val") - mins.get("val")})
+            if sorted(neg) not in uc:
+                uc.append({"const": sorted(neg), "val": 0})
+        elif len(pos) > maxs.get("val") - mins.get("val") and len(neg) != 0:
+            if sorted(neg) not in uc:
+                uc.append({"const": sorted(neg), "val": 0})
 
     def generatehint(self):
         """
         function to generate a hint for the game to proceed
         """
         # If safe list is not empty, give first element in safe list as a hint
-        if self.safe:    # if safe
-            step = self.safe.pop(0)     # remove the first element from the safe list
+        if self.safe:  # if safe
+            step = self.safe.pop(0)  # remove the first element from the safe list
             # Marking that this hint is not a random suggestion
             rand = 0
         else:
             # get remaining cells excluding the opened and flagged cells
             permittedsteps = self.cells - self.opened - self.flagged
-            step = random.choice(list(permittedsteps))      # from these cells, choose one randomly
+            step = random.choice(list(permittedsteps))  # from these cells, choose one randomly
             # Marking that this hint is a random suggestion
             rand = 1
         self.suggestedstep = (step, rand)
@@ -227,14 +317,21 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                         if selected in self.safe:
                             self.safe.remove(selected)
                         self.safe.insert(0, self.suggestedstep[0])
-                    step, rand = self.updateinformation()
-                    if rand == 0:
-                        print("Hint :: Choose %s " % str(step))
-                    else:
-                        print("Random suggestion :: Choose %s " % str(step))
+                    elif selected != self.suggestedstep[0] and self.suggestedstep[1] != 0:
+                        self.squares[self.suggestedstep[0]].config(text=" ", fg=None, bg=self._default_button_bg)
+
+                    if self.mode == 1:
+                        self.updateinformation()
+                    elif self.mode == 2:
+                        step, rand = self.constraintsolver()
+                        print(str(step) + " " + ("Hint" if rand == 0 else "Random"))
 
             button.config(command=clicked)
             self.refresh(xy)
+        # Starting point suggestion
+        self.suggestedstep = (random.choice(list(self.cells)), 1)
+        print("Start with cell %s " % str(self.suggestedstep[0]))
+        self.displayhint(self.suggestedstep)
 
     def refresh(self, xy):
         """Update GUI for given square."""
@@ -263,14 +360,12 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                 return u'\N{SKULL AND CROSSBONES}', None, 'red'
 
             mn = self.data.get(xy).get("clue")
-            if mn > 0:
+            if mn >= 0:
                 # Standard minesweeper colors
-                fg = {1: 'blue', 2: 'dark green', 3: 'red',
+                fg = {0: 'black', 1: 'blue', 2: 'dark green', 3: 'red',
                       4: 'dark blue', 5: 'dark red',
                       }.get(mn, 'black')
                 return str(mn), fg, 'white'
-            else:
-                return '0', None, 'white'
 
         # Updating information for unopened cells
         # If game is still ON, flagged cells are updated accordingly. And remaining cells retain their initial config.
@@ -296,6 +391,20 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
     # Updating cell information method from super class and refreshing if flagged
     def updateinformation(self):
         step = super(MineSweeperInteractiveGUI, self).updateinformation()
+        self.displayhint(step)
+        return step
+
+    def displayhint(self, step):
+        t = "H" if step[1] == 0 else "R"
+        print(step[0])
+        button = self.squares[step[0]]
+        button.config(text=t, fg="black", bg='green')
+        button.config(relief=tk.RAISED)
+
+    def constraintsolver(self):
+        print("constraintsolver")
+        step = super(MineSweeperInteractiveGUI, self).constraintsolver()
+        self.displayhint(step)
         return step
 
     # Calling Flag method from super class and refreshing the button
@@ -317,9 +426,18 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
 
 def main(cls):
     # Generate Starting window to get the size for minesweeper from USER
+
+    def startgame():
+        size = int(entry1.get())
+        game = cls(size, var.get())
+        root.destroy()
+        # This is to display game window
+        game.window.mainloop()  # GAME WINDOW(MINESWEEPER WINDOW)
+
     root = tk.Tk()
+    var = tk.IntVar()
     root.title("Let's Play Minesweeper")
-    canvas1 = tk.Canvas(root, width=400, height=200, relief='raised')
+    canvas1 = tk.Canvas(root, width=400, height=400, relief='raised')
     canvas1.pack()
     label1 = tk.Label(root, text='Minesweeper')
     label1.config(font=('helvetica', 14))
@@ -329,21 +447,24 @@ def main(cls):
     canvas1.create_window(200, 75, window=label2)
     entry1 = tk.Entry(root)
     canvas1.create_window(200, 125, window=entry1)
-
+    label3 = tk.Label(root, text='Select the agent type:')
+    label3.config(font=('helvetica', 10))
+    canvas1.create_window(200, 175, window=label3)
+    R1 = tk.Radiobutton(root, text="Basic", variable=var, value=1)
+    canvas1.create_window(180, 200, window=R1)
+    R2 = tk.Radiobutton(root, text="Knowledge Base", variable=var, value=2)
+    canvas1.create_window(209, 225, window=R2)
+    R3 = tk.Radiobutton(root, text="Pro Knowledge Base", variable=var, value=3)
+    canvas1.create_window(218, 250, window=R3)
     # Starts game
-    def startgame():
-        size = int(entry1.get())
-        game = cls(size)
-        root.destroy()
-        # This is to display game window
-        game.window.mainloop()                               # GAME WINDOW(MINESWEEPER WINDOW)
 
     # Button with label "Lets Play", which starts the game
     button1 = tk.Button(text='Lets Play', command=startgame, bg='brown', fg='white',
                         font=('helvetica', 9, 'bold'))
-    canvas1.create_window(200, 175, window=button1)
+    canvas1.create_window(200, 300, window=button1)
     # This is to display start window
-    root.mainloop()                                          # WINDOW BEFORE GAME WINDOW STARTS
+    root.mainloop()  # WINDOW BEFORE GAME WINDOW STARTS
+
 
 # Starting Point
 if __name__ == '__main__':
