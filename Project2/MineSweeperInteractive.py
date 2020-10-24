@@ -49,7 +49,7 @@ class MineSweeperInteractive:
         self.flagged = set()
         # Maintain list of safe cells to generate hints.
         self.safe = []
-        # mines_near[xy] will be populated when you open xy.
+        # track of cells which are completely solved i.e all neighbours are identified.
         self.solved = set()
         # It it was a mine, it will be 'mine' instead of a number.
         self.mines_busted = set()
