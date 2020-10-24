@@ -17,9 +17,10 @@ class MineSweeper1(object):
     """
 
     # Constructor with 2 arguments, size of minesweeper and the mode
-    def __init__(self, size, mode):
+    def __init__(self, size, mdensity, mode):
         self.size = size
         self.mode = mode
+        self.mdensity = mdensity
 
         # Creates the minesweeper board
         self.cells = set((x, y)
@@ -97,16 +98,7 @@ class MineSweeper1(object):
         """
         returns the number of mines based on the user input size of the minesweeper board
         """
-        if self.size < 20:
-            return math.floor(0.25 * (self.size ** 2))
-        elif 20 <= self.size < 40:
-            return math.floor(0.30 * (self.size ** 2))
-        elif 40 <= self.size < 60:
-            return math.floor(0.35 * (self.size ** 2))
-        elif 60 <= self.size < 100:
-            return math.floor(0.40 * (self.size ** 2))
-        else:
-            return math.floor(0.50 * (self.size ** 2))
+        return math.floor(self.mdensity * (self.size ** 2))
 
     def updateinformation(self):
         """
@@ -314,7 +306,8 @@ def main(cls):
     if "analysis".casefold().__eq__(Mode.casefold()):
         result = {}
         sizes = [30, 40, 50, 60]
-        iter = 5
+        mdenisty = 0.40
+        iterations = 5
         print("Generating Data")
         # for the sizes defined above
         for size in sizes:
@@ -326,18 +319,18 @@ def main(cls):
             meanbusted = 0
             # Avg time taken
             meantimetaken = 0
-            # Plays the game "iter" number of times
-            for i in range(0, iter):
-                game = cls(size, "A")
+            # Plays the game "iterations" number of times
+            for i in range(0, iterations):
+                game = cls(size, mdenisty, "A")
                 tmines, tflagged, tbusted, timetaken = game.letsplay()
                 # Update meanmines, meanflagged, meanbusted, meantimetaken accordingly
                 meanmines += tmines
                 meanflagged += tflagged
                 meanbusted += tbusted
                 meantimetaken += round(timetaken / (10 ** 3), 4)
-            result[size] = {"meanmines": math.floor(meanmines / iter), "meanflagged": math.floor(meanflagged / iter),
-                            "meanbusted": math.floor(meanbusted / iter),
-                            "meantimetaken": math.floor(meantimetaken / iter)}
+            result[size] = {"meanmines": math.floor(meanmines / iterations), "meanflagged": math.floor(meanflagged / iterations),
+                            "meanbusted": math.floor(meanbusted / iterations),
+                            "meantimetaken": math.floor(meantimetaken / iterations)}
         print("Plotting Data")
         # displays the graph for the parameters mentioned above
         disp_data(result, ["meanmines", "meanflagged", "meanbusted"], "Sizes", "Numbers", "Size vs efficiency")
@@ -346,7 +339,8 @@ def main(cls):
     else:  # if the mode is Test
         # Ask user for input size
         size = int(input("Enter the size "))
-        game = cls(size, "T")
+        mdensity = float(input("Enter the mine density (0 - 1) "))
+        game = cls(size, mdensity, "T")
         # Play the game and display the board
         game.letsplay()
         game.display()

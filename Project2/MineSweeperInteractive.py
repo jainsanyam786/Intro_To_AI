@@ -172,18 +172,9 @@ class MineSweeperInteractive:
 
     def constraintsolver(self):
         listconst = self.createconstraint()
-        print(listconst)
         if listconst:
             listconst = self.trivialcase(listconst)
-            print("after Trivicase")
-            print(listconst)
-            print("safe" + " " + str(self.safe))
-            print("flagged" + " " + str(self.flagged))
             listconst = self.subtractconstraint(listconst, 0)
-            print("after subtract")
-            print(listconst)
-            print("safe" + " " + str(self.safe))
-            print("flagged" + " " + str(self.flagged))
         return self.generatehint()
 
     def createconstraint(self):
@@ -344,14 +335,12 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                     if self.mode == 1:
                         self.updateinformation()
                     elif self.mode == 2:
-                        step, rand = self.constraintsolver()
-                        print(str(step) + " " + ("Hint" if rand == 0 else "Random"))
+                        self.constraintsolver()
 
             button.config(command=clicked)
             self.refresh(xy)
         # Starting point suggestion
         self.suggestedstep = (random.choice(list(self.cells)), 1)
-        print("Start with cell %s " % str(self.suggestedstep[0]))
         self.displayhint(self.suggestedstep)
 
     def refresh(self, xy):
@@ -398,8 +387,11 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                 return ' ', None, self._default_button_bg
         else:
             # If game is completed, flag cells are displayed green with flag sign
-            # For remaining cells, they will be just green
             if xy in self.flagged:
+                return u'\N{WHITE FLAG}', None, 'green'
+            # For remaining cells, they will be just green
+            elif xy in self._mines:
+                self.flagged.add(xy)
                 return u'\N{WHITE FLAG}', None, 'green'
             else:
                 return '', None, 'green'
@@ -417,7 +409,6 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
 
     def displayhint(self, step):
         t = "H" if step[1] == 0 else "R"
-        print(step[0])
         button = self.squares[step[0]]
         button.config(text=t, fg="black", bg='green')
         button.config(relief=tk.RAISED)
