@@ -172,13 +172,16 @@ class MineSweeperInteractive:
 
     def constraintsolver(self):
         listconst = self.createconstraint()
+        print(listconst)
         if listconst:
-            self.trivialcase(listconst)
+            listconst = self.trivialcase(listconst)
+            print("after Trivicase")
             print(listconst)
             print("safe" + " " + str(self.safe))
             print("flagged" + " " + str(self.flagged))
-            self.subtractconstraint(listconst)
+            listconst = self.subtractconstraint(listconst, 0)
             print("after subtract")
+            print(listconst)
             print("safe" + " " + str(self.safe))
             print("flagged" + " " + str(self.flagged))
         return self.generatehint()
@@ -201,46 +204,64 @@ class MineSweeperInteractive:
                         hiddenlist.add(n)
                     elif self.data.get(n).get("status") == "M":  # if the cell is a mine, add to minelist
                         mine += 1  # update number of mines detected
-                if hiddenlist:
+                if hiddenlist and {"const": sorted(list(hiddenlist)),
+                                   "val": self.data.get((x, y)).get("clue") - mine} not in listconst:
                     listconst.append(
                         {"const": sorted(list(hiddenlist)), "val": self.data.get((x, y)).get("clue") - mine})
                 else:
                     self.solved.add((x, y))
         # Based on updated information, calling method to generate hint
-        print(listconst)
         return listconst
 
     def trivialcase(self, lc):
         trivial = []
+        s = set()
+        f = set()
         for c in lc:
             if len(c.get("const")) == c.get("val"):
                 for i in c.get("const"):
+                    f.add(i)
                     self.data.get(i)["status"] = "M"
                     self.flag(i)
                 trivial.append(c)
             elif c.get("val") == 0:
                 for i in c.get("const"):
+                    s.add(i)
                     self.data.get(i)["status"] = "S"
                     if i not in self.opened and i not in self.safe:
                         self.safe.append(i)
                 trivial.append(c)
         [lc.remove(i) for i in trivial]
+        if len(s) != 0 or len(f) != 0 and lc:
+            for c in lc:
+                for sa in s:
+                    if sa in c.get("const"):
+                        c.get("const").remove(sa)
+                for fl in f:
+                    if fl in c.get("const"):
+                        c.get("const").remove(fl)
+                        c["val"] = c.get("val") - 1
+            lc = [i for n, i in enumerate(lc) if i not in lc[n + 1:]]
+            lc = self.trivialcase(lc)
+        return lc
 
-    def subtractconstraint(self, lc):
-        updatedconst = []
+    def subtractconstraint(self, lc, updates):
         for x, y in itertools.combinations(lc, 2):
             S1 = set(x.get("const"))
             S2 = set(y.get("const"))
             if S1.intersection(S2):
                 if x.get("val") > y.get("val"):
-                    self.updateconst(x, y, updatedconst)
+                    self.updateconst(x, y, lc, updates)
 
                 elif x.get("val") < y.get("val"):
-                    self.updateconst(y, x, updatedconst)
-        print(updatedconst)
-        self.trivialcase(updatedconst)
+                    self.updateconst(y, x, lc, updates)
+        if updates != 0:
+            print("reached")
+            lc = self.trivialcase(lc)
+            lc = self.subtractconstraint(lc, 0)
+        return lc
 
-    def updateconst(self, maxs, mins, uc):
+    def updateconst(self, maxs, mins, uc, updates):
         maxset = set(maxs.get("const"))
         minset = set(mins.get("const"))
         pos = []
@@ -248,13 +269,13 @@ class MineSweeperInteractive:
         [pos.append(p) for p in maxset - minset]
         [neg.append(n) for n in minset - maxset]
         if len(pos) == maxs.get("val") - mins.get("val"):
-            if sorted(pos) not in uc:
+            if {"const": sorted(pos), "val": maxs.get("val") - mins.get("val")} not in uc:
                 uc.append({"const": sorted(pos), "val": maxs.get("val") - mins.get("val")})
-            if sorted(neg) not in uc:
+                updates = updates + 1
+            if {"const": sorted(neg), "val": 0} not in uc and len(neg) != 0:
                 uc.append({"const": sorted(neg), "val": 0})
-        elif len(pos) > maxs.get("val") - mins.get("val") and len(neg) != 0:
-            if sorted(neg) not in uc:
-                uc.append({"const": sorted(neg), "val": 0})
+                updates = updates + 1
+        return updates
 
     def generatehint(self):
         """
@@ -470,3 +491,6 @@ def main(cls):
 if __name__ == '__main__':
     # Calling GUI of MinesweeperInteractive class
     main(MineSweeperInteractiveGUI)
+
+
+
