@@ -1,3 +1,4 @@
+import itertools
 import random
 import sys
 import tkinter as tk
@@ -9,7 +10,7 @@ import datetime as t
 sys.setrecursionlimit(100000)
 
 
-class MineSweeper1(object):
+class MineSweeper2(object):
     """
     In this class, Actual computation and minesweeper generation takes place
     This class creates the basic layout of the minesweeper board using the constructor. It checks if the opened cell is
@@ -51,9 +52,10 @@ class MineSweeper1(object):
         self.opened = set()
         # flagged the identified mine.
         self.flagged = set()
-        # Mantain list of safe cells to generate hints.
+        # Maintain list of safe cells to generate hints.
         self.safe = []
-        # mines_near[xy] will be populated when you open xy.
+        # Keep track of solved data after identifying
+        self.solved = set()
         # If it was a mine, it will be 'mine' instead of a number.
         self.mines_busted = set()
 
@@ -73,7 +75,6 @@ class MineSweeper1(object):
             self.data.get(xy)["status"] = "S"  # otherwise update status as safe
             # Updating clue based on mines found in neighbors
             self.data.get(xy)["clue"] = len(self.data[xy].get("neighbour") & self._mines)
-            self.flagged.discard(xy)  # remove the cell from the flagged list, since there's no way it can be a mine now
             # Reducing the number of empty mines
             self.empty_remaining -= 1  # decrease number of non-mines by 1
             # Checking the condition of winning
@@ -100,55 +101,102 @@ class MineSweeper1(object):
         """
         return math.floor(self.mdensity * (self.size ** 2))
 
-    def updateinformation(self):
+    def constraintsolver(self):
+        listconst = self.createconstraint()
+        if listconst:
+            listconst = self.trivialcase(listconst)
+            listconst = self.subtractconstraint(listconst, 0)
+        return self.generatehint()
+
+    def createconstraint(self):
         """
-        updates the information for the cells in the board
+        updates the constraint for the cells in the board
         """
+        listconst = []
         # for all the cells in the board except the busted mines and flagged cells
         for (x, y) in (self.cells - self.mines_busted - self.flagged):
             if self.data.get((x, y)).get("clue") != "ni":  # if the clue for the cell is not ni (not identified)
-                # Number of hidden cells around x, y
-                hidden = 0
                 # List of hidden cells around x, y
                 hiddenlist = set()
-                # Number of safe cells around x, y
-                safe = 0
-                # List of safe cells around x, y
-                safelist = set()
-                # Number of mine cells around x, y
                 mine = 0
                 # List of mine cells around x, y
-                minelist = set()
-
                 # Iterating over each neighbor of x, y to update the above mentioned list
                 for n in self.data.get((x, y)).get("neighbour"):
                     if self.data.get(n).get("status") == "C":
-                        hidden += 1
                         hiddenlist.add(n)
-                    elif self.data.get(n).get("status") == "S":  # if the status of the cell is safe, add to safelist
-                        safe += 1  # update no of safe cells
-                        safelist.add(n)
                     elif self.data.get(n).get("status") == "M":  # if the cell is a mine, add to minelist
-                        mine += 1  # update no of mines detected
-                        minelist.add(n)
-
-                # If total number of remaining mines around x,y equals to total number of hidden cells around x, y
-                # then it implies that all hidden cells around x, y are mines.
-                if self.data.get((x, y)).get("clue") - mine == hidden:
-                    for sn in hiddenlist:
-                        self.data.get(sn)["status"] = "M"
-                        # Adding identified mines and flagging it
-                        self.flag(sn)
-                # If all mines around x,y have been identified, then all the remaining hidden cells around x, y
-                # are safe.
-                elif (self.data.get((x, y)).get("neighbours") - self.data.get((x, y)).get("clue")) - safe == hidden:
-                    for sn in hiddenlist:
-                        self.data.get(sn)["status"] = "S"
-                        # Adding identified safe cells to the list
-                        if sn not in self.opened and sn not in self.safe:
-                            self.safe.append(sn)
+                        mine += 1  # update number of mines detected
+                if hiddenlist and {"const": sorted(list(hiddenlist)),
+                                   "val": self.data.get((x, y)).get("clue") - mine} not in listconst:
+                    listconst.append(
+                        {"const": sorted(list(hiddenlist)), "val": self.data.get((x, y)).get("clue") - mine})
+                else:
+                    self.solved.add((x, y))
         # Based on updated information, calling method to generate hint
-        return self.generatehint()
+        return listconst
+
+    def trivialcase(self, lc):
+        trivial = []
+        s = set()
+        f = set()
+        for c in lc:
+            if len(c.get("const")) == c.get("val"):
+                for i in c.get("const"):
+                    f.add(i)
+                    self.data.get(i)["status"] = "M"
+                    self.flag(i)
+                trivial.append(c)
+            elif c.get("val") == 0:
+                for i in c.get("const"):
+                    s.add(i)
+                    self.data.get(i)["status"] = "S"
+                    if i not in self.opened and i not in self.safe:
+                        self.safe.append(i)
+                trivial.append(c)
+        [lc.remove(i) for i in trivial]
+        if len(s) != 0 or len(f) != 0 and lc:
+            for c in lc:
+                for sa in s:
+                    if sa in c.get("const"):
+                        c.get("const").remove(sa)
+                for fl in f:
+                    if fl in c.get("const"):
+                        c.get("const").remove(fl)
+                        c["val"] = c.get("val") - 1
+            lc = [i for n, i in enumerate(lc) if i not in lc[n + 1:]]
+            lc = self.trivialcase(lc)
+        return lc
+
+    def subtractconstraint(self, lc, updates):
+        for x, y in itertools.combinations(lc, 2):
+            S1 = set(x.get("const"))
+            S2 = set(y.get("const"))
+            if S1.intersection(S2):
+                if x.get("val") > y.get("val"):
+                    self.updateconst(x, y, lc, updates)
+
+                elif x.get("val") < y.get("val"):
+                    self.updateconst(y, x, lc, updates)
+        if updates != 0:
+            lc = self.trivialcase(lc)
+            lc = self.subtractconstraint(lc, 0)
+        return lc
+
+    def updateconst(self, maxs, mins, uc, updates):
+        maxset = set(maxs.get("const"))
+        minset = set(mins.get("const"))
+        pos = []
+        neg = []
+        [pos.append(p) for p in maxset - minset]
+        [neg.append(n) for n in minset - maxset]
+        if len(pos) == maxs.get("val") - mins.get("val"):
+            if {"const": sorted(pos), "val": maxs.get("val") - mins.get("val")} not in uc:
+                uc.append({"const": sorted(pos), "val": maxs.get("val") - mins.get("val")})
+                updates = updates + 1
+            if {"const": sorted(neg), "val": 0} not in uc and len(neg) != 0:
+                uc.append({"const": sorted(neg), "val": 0})
+                updates = updates + 1
+        return updates
 
     def generatehint(self):
         """
@@ -177,7 +225,7 @@ class MineSweeper1(object):
             print("You won without tripping any mines :-)")
 
 
-class MineSweeperPlay(MineSweeper1):
+class MineSweeper2Play(MineSweeper2):
     """
     Play the Minesweeper game!
     This class constructs the basic GUI for the above class using the Tkinter library.
@@ -186,7 +234,7 @@ class MineSweeperPlay(MineSweeper1):
     # Constructor
     def __init__(self, *args, **kw):
         # Calling MAIN CLASS
-        MineSweeper1.__init__(self, *args, **kw)  # use the __init__ function from the above class to create the board
+        MineSweeper2.__init__(self, *args, **kw)  # use the __init__ function from the above class to create the board
 
     def letsplay(self):
         """
@@ -194,7 +242,7 @@ class MineSweeperPlay(MineSweeper1):
         """
         start_time = t.datetime.now()  # Noting time taken to complete
         while self.empty_remaining > 0:  # until all cells are opened
-            step = self.updateinformation()
+            step = self.constraintsolver()
             self.open(step)
         return len(self._mines), len(self.flagged), len(self.mines_busted), (t.datetime.now() - start_time).microseconds
 
@@ -255,14 +303,12 @@ class MineSweeperPlay(MineSweeper1):
                 return u'\N{SKULL AND CROSSBONES}', None, 'red'
 
             mn = self.data.get(xy).get("clue")
-            if mn > 0:
+            if mn >= 0:
                 # Standard minesweeper colors
-                fg = {1: 'blue', 2: 'dark green', 3: 'red',
+                fg = {0: 'black', 1: 'blue', 2: 'dark green', 3: 'red',
                       4: 'dark blue', 5: 'dark red',
                       }.get(mn, 'black')
                 return str(mn), fg, 'white'
-            else:
-                return '0', None, 'white'
 
         # if xy is in flagged
         elif xy in self.flagged:
@@ -332,7 +378,8 @@ def main(cls):
                 meanflagged += tflagged
                 meanbusted += tbusted
                 meantimetaken += round(timetaken / (10 ** 3), 4)
-            result[size] = {"meanmines": math.floor(meanmines / iterations), "meanflagged": math.floor(meanflagged / iterations),
+            result[size] = {"meanmines": math.floor(meanmines / iterations),
+                            "meanflagged": math.floor(meanflagged / iterations),
                             "meanbusted": math.floor(meanbusted / iterations),
                             "meantimetaken": math.floor(meantimetaken / iterations)}
         print("Plotting Data")
@@ -352,4 +399,4 @@ def main(cls):
 
 if __name__ == '__main__':
     # Runs the main function
-    main(MineSweeperPlay)
+    main(MineSweeper2Play)
