@@ -228,7 +228,8 @@ class MineSweeper2(object):
 class MineSweeper2Play(MineSweeper2):
     """
     Play the Minesweeper game!
-    This class constructs the basic GUI for the above class using the Tkinter library.
+    This class automates the playing of minesweeper based on hints for the above class using the Tkinter library.
+    Based on 'Test' it also displays the results
     """
 
     # Constructor
