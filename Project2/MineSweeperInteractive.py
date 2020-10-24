@@ -171,10 +171,16 @@ class MineSweeperInteractive:
         return self.generatehint()
 
     def constraintsolver(self):
+        """
+        function to implement the constraint solver using knowledge base
+        """
+        # call createconstraint to create constraints
         listconst = self.createconstraint()
+        # if listconst is not empty solve constraint
         if listconst:
             listconst = self.trivialcase(listconst)
             listconst = self.subtractconstraint(listconst, 0)
+        # if generate hint using safe list
         return self.generatehint()
 
     def createconstraint(self):
@@ -187,8 +193,8 @@ class MineSweeperInteractive:
             if self.data.get((x, y)).get("clue") != "ni":  # if the clue for the cell is not ni (not identified)
                 # List of hidden cells around x, y
                 hiddenlist = set()
+                # count of mine cells around x, y
                 mine = 0
-                # List of mine cells around x, y
                 # Iterating over each neighbor of x, y to update the above mentioned list
                 for n in self.data.get((x, y)).get("neighbour"):
                     if self.data.get(n).get("status") == "C":
@@ -205,16 +211,22 @@ class MineSweeperInteractive:
         return listconst
 
     def trivialcase(self, lc):
+        """
+        function to indentiufy and solve trivial constraint. if cells are identified they are used to reduce the other
+        constraints and then constraints are solved again. This is repeated till no cells are identified
+        """
         trivial = []
         s = set()
         f = set()
         for c in lc:
+            # case where all are mines
             if len(c.get("const")) == c.get("val"):
                 for i in c.get("const"):
                     f.add(i)
                     self.data.get(i)["status"] = "M"
                     self.flag(i)
                 trivial.append(c)
+            # case where all are safe
             elif c.get("val") == 0:
                 for i in c.get("const"):
                     s.add(i)
@@ -222,43 +234,64 @@ class MineSweeperInteractive:
                     if i not in self.opened and i not in self.safe:
                         self.safe.append(i)
                 trivial.append(c)
+        # remove the solved constraint
         [lc.remove(i) for i in trivial]
+        # if any cell was identified reduce constraints and trivial case
+        # if no  new cell was identified terminate this
         if len(s) != 0 or len(f) != 0 and lc:
             for c in lc:
+                # for safe just remove the cell from the costriant
                 for sa in s:
                     if sa in c.get("const"):
                         c.get("const").remove(sa)
+                # for mines remove the cell from the costriant and decrease the value by one
                 for fl in f:
                     if fl in c.get("const"):
                         c.get("const").remove(fl)
                         c["val"] = c.get("val") - 1
+            # removing duplicates if reduction result in duplicates
             lc = [i for n, i in enumerate(lc) if i not in lc[n + 1:]]
+            # calling trivial case on updated list
             lc = self.trivialcase(lc)
         return lc
 
     def subtractconstraint(self, lc, updates):
+        """
+        function iterate over constraints and subtract them to reduce them to trivial case
+        if trival cases are identified after calling updateconst then trivialcase is called
+        to solve those, these method is also called recursively till no updates are found
+        """
+        # iterate over constraints and pick two constraint to solve
         for x, y in itertools.combinations(lc, 2):
             S1 = set(x.get("const"))
             S2 = set(y.get("const"))
+            # check if these two constraint have some thing commmon
             if S1.intersection(S2):
+                # if value for constraint first is greater than constraint second
                 if x.get("val") > y.get("val"):
                     self.updateconst(x, y, lc, updates)
-
+                # if value for constraint second is greater than constraint first
                 elif x.get("val") < y.get("val"):
                     self.updateconst(y, x, lc, updates)
+        # if some updates were made then call trivial case and then subtractconstraint
         if updates != 0:
-            print("reached")
             lc = self.trivialcase(lc)
             lc = self.subtractconstraint(lc, 0)
         return lc
 
     def updateconst(self, maxs, mins, uc, updates):
+        """
+        function solve two given constraint to reduce them into trivial constraint.
+        """
         maxset = set(maxs.get("const"))
         minset = set(mins.get("const"))
+        # this will store cells exclusive to constraint with greater value
         pos = []
+        # this will store cells exclusive to constraint with lesser value
         neg = []
         [pos.append(p) for p in maxset - minset]
         [neg.append(n) for n in minset - maxset]
+        # if length of pos equals to subtraction value then all cells in pos are mine and all in neg are safe
         if len(pos) == maxs.get("val") - mins.get("val"):
             if {"const": sorted(pos), "val": maxs.get("val") - mins.get("val")} not in uc:
                 uc.append({"const": sorted(pos), "val": maxs.get("val") - mins.get("val")})
@@ -330,6 +363,7 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                             self.safe.remove(selected)
                         self.safe.insert(0, self.suggestedstep[0])
                     elif selected != self.suggestedstep[0] and self.suggestedstep[1] != 0:
+                        # for random suggestion removing the suggestion prompt
                         self.squares[self.suggestedstep[0]].config(text=" ", fg=None, bg=self._default_button_bg)
 
                     if self.mode == 1:
@@ -408,6 +442,10 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         return step
 
     def displayhint(self, step):
+        """
+        This method display the hint on mine sweeper hint will have test H if it is calculated suggetion.
+        if it is a random suggestion it will have R
+        """
         t = "H" if step[1] == 0 else "R"
         button = self.squares[step[0]]
         button.config(text=t, fg="black", bg='green')
