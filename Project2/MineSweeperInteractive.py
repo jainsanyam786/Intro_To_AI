@@ -74,26 +74,12 @@ class MineSweeperInteractive:
             self.data.get(xy)["clue"] = len(self.data[xy].get("neighbour") & self._mines)
             # Reducing the number of empty mines
             self.empty_remaining -= 1
-            # Checking the condition of winning
-            if self.empty_remaining <= 0:
-                self.win()
 
     def flag(self, xy):
         """
         Flags the cell xy
         """
         self.flagged.add(xy)
-
-    def win(self):
-        """
-        Display number of mines tripped (busted)
-        """
-        # Total number of mines busted by user while playing
-        trippedmines = len(self.mines_busted)
-        if trippedmines:
-            self.message("You finished with %s tripped mines. Total mines were %s" % (trippedmines, len(self._mines)))
-        else:
-            self.message("You won without tripping any mines :-)")
 
     def getneighbour(self, x, y):
         """
@@ -319,9 +305,6 @@ class MineSweeperInteractive:
         self.suggestedstep = (step, rand)
         return step, rand
 
-    def message(self, string):
-        """ To be overridden by GUI class"""
-
 
 class MineSweeperInteractiveGUI(MineSweeperInteractive):
     """
@@ -356,8 +339,8 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
             self._default_button_bg = self.squares[xy].cget("bg")
 
             def clicked(selected=xy):
-                self.open(selected)
-                if self.empty_remaining > 0:
+                if self.empty_remaining > 0 and (self._mines != self.flagged.union(self.mines_busted)):
+                    self.open(selected)
                     if selected != self.suggestedstep[0] and self.suggestedstep[1] != 1:
                         if selected in self.safe:
                             self.safe.remove(selected)
@@ -370,6 +353,8 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                         self.updateinformation()
                     elif self.mode == 2:
                         self.constraintsolver()
+                else:
+                    self.win()
 
             button.config(command=clicked)
             self.refresh(xy)
@@ -390,7 +375,7 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
             button.config(relief=tk.SUNKEN)
 
         # Updating window title string to display no of unopened cells to user
-        if self.empty_remaining > 0:
+        if self.empty_remaining > 0 and (self._mines != self.flagged.union(self.mines_busted)):
             self.message("%d Cells to go" %
                          len(self.cells - self.opened))
 
@@ -413,7 +398,7 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
 
         # Updating information for unopened cells
         # If game is still ON, flagged cells are updated accordingly. And remaining cells retain their initial config.
-        if self.empty_remaining > 0:
+        if self.empty_remaining > 0 and (self._mines != self.flagged.union(self.mines_busted)):
             # during play
             if xy in self.flagged:
                 return u'\N{BLACK FLAG}', None, 'yellow'
@@ -424,7 +409,7 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
             if xy in self.flagged:
                 return u'\N{WHITE FLAG}', None, 'green'
             # For remaining cells, they will be just green
-            elif xy in self._mines:
+            elif xy in ((self._mines - self.flagged) - self.mines_busted):
                 self.flagged.add(xy)
                 return u'\N{WHITE FLAG}', None, 'green'
             else:
@@ -452,7 +437,6 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         button.config(relief=tk.RAISED)
 
     def constraintsolver(self):
-        print("constraintsolver")
         step = super(MineSweeperInteractiveGUI, self).constraintsolver()
         self.displayhint(step)
         return step
@@ -464,10 +448,17 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
 
     # Calling Win method from super class and refreshing the button
     def win(self):
-        super(MineSweeperInteractiveGUI, self).win()
-        # change all unopened mines to victory state
+        trippedmines = len(self.mines_busted)
+        if trippedmines:
+            self.message("You finished with %s tripped mines. Total mines were %s" % (trippedmines, len(self._mines)))
+        else:
+            self.message("You won without tripping any mines :-)")
         for xy in self._mines - self.opened:
             self.refresh(xy)
+        if self.empty_remaining > 0:
+            for xy in (((self.cells - self._mines) - self.opened) - self.flagged):
+                self.open(xy)
+
 
     # Over writing the method from super class
     def message(self, string):
@@ -520,6 +511,3 @@ def main(cls):
 if __name__ == '__main__':
     # Calling GUI of MinesweeperInteractive class
     main(MineSweeperInteractiveGUI)
-
-
-
