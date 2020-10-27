@@ -259,6 +259,12 @@ class MineSweeperInteractive:
                 # if value for constraint second is greater than constraint first
                 elif x.get("val") < y.get("val"):
                     self.updateconst(y, x, lc, updates)
+                else:
+                    if S2.issubset(S1) and len(S2) > y.get("val"):
+                        updates = self.updateconst(x, y, lc, updates)
+                    elif S1.issubset(S2) and len(S1) > x.get("val"):
+                        updates = self.updateconst(y, x, lc, updates)
+
         # if some updates were made then call trivial case and then subtractconstraint
         if updates != 0:
             lc = self.trivialcase(lc)
@@ -271,12 +277,10 @@ class MineSweeperInteractive:
         """
         maxset = set(maxs.get("const"))
         minset = set(mins.get("const"))
-        # this will store cells exclusive to constraint with greater value
-        pos = []
-        # this will store cells exclusive to constraint with lesser value
-        neg = []
-        [pos.append(p) for p in maxset - minset]
-        [neg.append(n) for n in minset - maxset]
+        # pos will store cells exclusive to constraint with greater value
+        # neg will store cells exclusive to constraint with lesser value
+        pos = list(maxset - minset)
+        neg = list(minset - maxset)
         # if length of pos equals to subtraction value then all cells in pos are mine and all in neg are safe
         if len(pos) == maxs.get("val") - mins.get("val"):
             if {"const": sorted(pos), "val": maxs.get("val") - mins.get("val")} not in uc:

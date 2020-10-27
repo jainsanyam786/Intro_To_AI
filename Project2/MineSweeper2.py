@@ -177,6 +177,11 @@ class MineSweeper2(object):
 
                 elif x.get("val") < y.get("val"):
                     self.updateconst(y, x, lc, updates)
+            else:
+                if S2.issubset(S1) and len(S2) > y.get("val"):
+                    updates = self.updateconst(x, y, lc, updates)
+                elif S1.issubset(S2) and len(S1) > x.get("val"):
+                    updates = self.updateconst(y, x, lc, updates)
         if updates != 0:
             lc = self.trivialcase(lc)
             lc = self.subtractconstraint(lc, 0)
@@ -185,10 +190,8 @@ class MineSweeper2(object):
     def updateconst(self, maxs, mins, uc, updates):
         maxset = set(maxs.get("const"))
         minset = set(mins.get("const"))
-        pos = []
-        neg = []
-        [pos.append(p) for p in maxset - minset]
-        [neg.append(n) for n in minset - maxset]
+        pos = list(maxset - minset)
+        neg = list(minset - maxset)
         if len(pos) == maxs.get("val") - mins.get("val"):
             if {"const": sorted(pos), "val": maxs.get("val") - mins.get("val")} not in uc:
                 uc.append({"const": sorted(pos), "val": maxs.get("val") - mins.get("val")})
