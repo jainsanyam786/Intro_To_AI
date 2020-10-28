@@ -3,6 +3,7 @@ import sys
 import tkinter as tk
 import math
 import itertools
+import numpy as np
 
 # defaults to 1000, recursive AI might need more (e.g. 40x40 game)
 sys.setrecursionlimit(100000)
@@ -17,6 +18,8 @@ class MineSweeperInteractive:
     def __init__(self, size, mode):
         self.size = size
         self.mode = mode
+        self.variables = set()
+        self.solutions = []
 
         # Create minesweeper board
         self.cells = set((x, y)
@@ -309,6 +312,101 @@ class MineSweeperInteractive:
         self.suggestedstep = (step, rand)
         return step, rand
 
+    def setvariables(self, constr):
+        for const in constr:
+            [self.variables.add(i) for i in const.get("const")]
+
+    def getsolutions(self):
+        return self.solutions
+
+    def appendsolution(self, solution):
+        self.solutions.append(solution)
+
+    def backtrackingsearch(self):
+        self.setvariables(self.createconstraint())
+        print(self.variables)
+        self.recursivebacktracking({})
+
+    def recursivebacktracking(self, assignment):
+        if len(assignment.keys()) == len(self.variables):
+            return assignment
+        var = sorted(list(self.variables - assignment.keys())).pop(0)
+        for value in [0, 1]:
+            assignment.update({var: value})
+            c = self.check_constraint(assignment)
+            if c:
+                result = self.recursivebacktracking(assignment)
+                if result != "failure":
+                    self.appendsolution(result.copy())
+            assignment.pop(var)
+        return "failure"
+
+    def check_constraint(self, assignment):
+        csp2 = self.createconstraint()
+        for v in assignment:
+            for const in csp2:
+                if v in const.get("const") and assignment.get(v) == 0:
+                    const.get("const").remove(v)
+                    if len(const.get("const")) < const.get("val"):
+                        return False
+                elif v in const.get("const") and assignment.get(v) == 1:
+                    const.get("const").remove(v)
+                    const["val"] = const.get("val") - 1
+                    if const.get("val") < 0:
+                        return False
+        return True
+
+    def giveprobability(self):
+        print(self.getsolutions())
+        result = self.getsolutions()
+        deno = len(result)
+        dictprob = {}
+        arrayw = np.zeros((len(result), len(self.variables)), int)
+        if result:
+            for index, sol in enumerate(result):
+                arrayw[index] = [sol.get(i) for jndex, i in enumerate(sol)]
+
+            for i, var in enumerate(result[0]):
+                prob = round(np.sum(arrayw[:, i]) / deno, 2)
+                dictprob.update({var: prob})
+        return dictprob
+
+    def processprobability(self, dictprob):
+        for cell in dictprob:
+            if dictprob.get(cell) == 0:
+                if cell not in self.safe:
+                    self.safe.append(cell)
+            elif dictprob.get(cell) == 1:
+                self.flag(cell)
+        print(self.safe)
+        print(self.flagged)
+        if self.safe:
+            print("found safe")
+            nextstep = self.safe.pop(0)
+            return nextstep, 0
+        if not self.safe:
+            if dictprob:
+                minprob = min(dictprob.values())
+                res = list(filter(lambda x: dictprob[x] == minprob, dictprob))
+                print("best guess")
+                return res.pop(0), 2
+            else:
+                permittedsteps = self.cells - self.opened - self.flagged
+                step = random.choice(list(permittedsteps))  # from these cells, choose one randomly
+                return step, 1
+
+    def probabilisticsolver(self):
+        """
+        function to implement the probablistic solver using knowledge base
+        """
+        # call createconstraint to create constraints
+        self.backtrackingsearch()
+        probabs = self.giveprobability()
+        print(probabs)
+        suggestion = self.processprobability(probabs)
+        print(suggestion)
+        return suggestion
+
 
 class MineSweeperInteractiveGUI(MineSweeperInteractive):
     """
@@ -357,6 +455,8 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                         self.updateinformation()
                     elif self.mode == 2:
                         self.constraintsolver()
+                    elif self.mode == 3:
+                        self.probabilisticsolver()
                 else:
                     self.win()
 
@@ -430,20 +530,25 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         self.displayhint(step)
         return step
 
+    def constraintsolver(self):
+        step = super(MineSweeperInteractiveGUI, self).constraintsolver()
+        self.displayhint(step)
+        return step
+
+    def probabilisticsolver(self):
+        step = super(MineSweeperInteractiveGUI, self).probabilisticsolver()
+        self.displayhint(step)
+        return step
+
     def displayhint(self, step):
         """
         This method display the hint on mine sweeper hint will have test H if it is calculated suggetion.
         if it is a random suggestion it will have R
         """
-        t = "H" if step[1] == 0 else "R"
+        t = "H" if step[1] == 0 else "R" if step[1] == 1 else "CG"
         button = self.squares[step[0]]
         button.config(text=t, fg="black", bg='green')
         button.config(relief=tk.RAISED)
-
-    def constraintsolver(self):
-        step = super(MineSweeperInteractiveGUI, self).constraintsolver()
-        self.displayhint(step)
-        return step
 
     # Calling Flag method from super class and refreshing the button
     def flag(self, xy):
@@ -462,7 +567,6 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         if self.empty_remaining > 0:
             for xy in (((self.cells - self._mines) - self.opened) - self.flagged):
                 self.open(xy)
-
 
     # Over writing the method from super class
     def message(self, string):
@@ -499,7 +603,7 @@ def main(cls):
     canvas1.create_window(180, 200, window=R1)
     R2 = tk.Radiobutton(root, text="Knowledge Base", variable=var, value=2)
     canvas1.create_window(209, 225, window=R2)
-    R3 = tk.Radiobutton(root, text="Pro Knowledge Base", variable=var, value=3)
+    R3 = tk.Radiobutton(root, text="Probablistic", variable=var, value=3)
     canvas1.create_window(218, 250, window=R3)
     # Starts game
 
