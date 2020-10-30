@@ -170,15 +170,12 @@ class MineSweeper1(object):
 
     def win(self):
         """
-        Display number of mines tripped (busted)
+        Display final score after game is completed. final score is #mines flagged/# mines
         """
         # Total number of mines busted by user while playing
-        trippedmines = len(self.mines_busted)
-        if trippedmines:
-            print("You finished with %s tripped  mines :: Total numbers of mine were %s"
-                  % (trippedmines, len(self._mines)))
-        else:
-            print("You won without tripping any mines :-)")
+        if self.mines_busted:
+            print("You finished with %s tripped mines. Final score %s" % (
+                len(self.mines_busted), len(self.flagged) / len(self._mines)))
 
 
 class MineSweeperPlay(MineSweeper1):
@@ -228,12 +225,9 @@ class MineSweeperPlay(MineSweeper1):
             # needed to restore bg to default when unflagging
             self.refresh(xy, squares)
 
-        # if the board is cleared without tripping any mines
-        if self.mines_busted == 0:
-            window.title("You won without tripping any mines :-)")
-        else:  # otherwise, print number of mines tripped
-            window.title("You finished with %s tripped mines and Total number of mines were %s" % (
-                len(self.mines_busted), len(self._mines)))
+        # Displaying final score
+        window.title("You finished with %s tripped mines. Final score %s" % (
+            len(self.mines_busted), len(self.flagged) / len(self._mines)))
         window.mainloop()
 
     def refresh(self, xy, squares):

@@ -64,8 +64,6 @@ class MineSweeper3(object):
         self.solved = set()
         # It it was a mine, it will be 'mine' instead of a number.
         self.mines_busted = set()
-        # keeping track of suggestions initialized with 1 signifies it is random
-        self.suggestedstep = ((-1, -1), 1)
 
     def open(self, xy):
         """
@@ -162,9 +160,9 @@ class MineSweeper3(object):
     def recursivebacktracking(self, assignment):
         if len(assignment.keys()) == len(self.variables):
             return assignment
-        if self.mode == 3:
+        if self.agent == "P":
             var = sorted(list(self.variables - assignment.keys())).pop(0)
-        elif self.mode == 4:
+        elif self.agent == "IP":
             var = self.customgetvar(assignment)
         for value in [0, 1]:
             assignment.update({var: value})
@@ -219,19 +217,15 @@ class MineSweeper3(object):
         if self.safe:
             nextstep = self.safe.pop(0)
             step = nextstep
-            rand = 0
         elif not self.safe:
             if dictprob:
                 minprob = min(dictprob.values())
                 res = list(filter(lambda x: dictprob[x] == minprob, dictprob))
                 step = res.pop(0)
-                rand = 2
             else:
                 permittedsteps = self.cells - self.opened - self.flagged
                 step = random.choice(list(permittedsteps))  # from these cells, choose one randomly
-                rand = 1
-        self.suggestedstep = (step, rand)
-        return step, rand
+        return step
 
     def probabilisticsolver(self):
         """
@@ -240,7 +234,6 @@ class MineSweeper3(object):
         # call createconstraint to create constraints
         self.backtrackingsearch()
         probabs = self.giveprobability()
-        print(probabs)
         suggestion = self.processprobability(probabs)
         return suggestion
 
@@ -275,14 +268,12 @@ class MineSweeper3(object):
 
     def win(self):
         """
-        Display number of mines tripped (busted)
+        Display final score after game is completed. final score is #mines flagged/# mines
         """
         # Total number of mines busted by user while playing
         if self.mines_busted:
-            print("You finished with %s tripped  mines :: Total numbers of mine were %s"
-                  % (len(self.mines_busted), len(self._mines)))
-        else:
-            print("You won without tripping any mines :-)")
+            print("You finished with %s tripped mines. Final score %s" % (
+                len(self.mines_busted), len(self.flagged) / len(self._mines)))
 
 
 class MineSweeper3Play(MineSweeper3):
@@ -332,12 +323,9 @@ class MineSweeper3Play(MineSweeper3):
             # needed to restore bg to default when unflagging
             self.refresh(xy, squares)
 
-        # if the board is cleared without tripping any mines
-        if self.mines_busted == 0:
-            window.title("You won without tripping any mines :-)")
-        else:  # otherwise, print number of mines tripped
-            window.title("You finished with %s tripped mines and Total number of mines were %s" % (
-                len(self.mines_busted), len(self._mines)))
+        # Displaying final score
+        window.title("You finished with %s tripped mines. Final score %s" % (
+            len(self.mines_busted), len(self.flagged) / len(self._mines)))
         window.mainloop()
 
     def refresh(self, xy, squares):
@@ -353,11 +341,6 @@ class MineSweeper3Play(MineSweeper3):
         # Updating information for button if it is opened
         if xy in self.opened:
             button.config(relief=tk.SUNKEN)
-
-        # Updating window title string to display no of unopened cells to user
-        if self.empty_remaining > 0 and (self._mines != self.flagged.union(self.mines_busted)):
-            self.message("%d Cells to go" %
-                         len(self.cells - self.opened))
 
     def getvisualdataforcell(self, xy):
         """

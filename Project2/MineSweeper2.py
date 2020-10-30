@@ -163,7 +163,7 @@ class MineSweeper2(object):
                     if fl in c.get("const"):
                         c.get("const").remove(fl)
                         c["val"] = c.get("val") - 1
-            lc = [const for index, const in enumerate(lc) if i not in lc[index + 1:] and i.get('const')]
+            lc = [const for index, const in enumerate(lc) if const not in lc[index + 1:] and const.get('const')]
             lc = self.trivialcase(lc)
         return lc
 
@@ -222,14 +222,14 @@ class MineSweeper2(object):
 
     def win(self):
         """
-        Display number of mines tripped (busted)
+        Display final score after game is completed. final score is #mines flagged/# mines
         """
         # Total number of mines busted by user while playing
         if self.mines_busted:
-            print("You finished with %s tripped  mines :: Total numbers of mine were %s"
-                  % (len(self.mines_busted), len(self._mines)))
-        else:
-            print("You won without tripping any mines :-)")
+            print("You finished with %s tripped mines. Final score %s" % (
+                len(self.mines_busted), len(self.flagged) / len(self._mines)))
+
+
 
 
 class MineSweeper2Play(MineSweeper2):
@@ -279,12 +279,9 @@ class MineSweeper2Play(MineSweeper2):
             # needed to restore bg to default when unflagging
             self.refresh(xy, squares)
 
-        # if the board is cleared without tripping any mines
-        if self.mines_busted == 0:
-            window.title("You won without tripping any mines :-)")
-        else:  # otherwise, print number of mines tripped
-            window.title("You finished with %s tripped mines and Total number of mines were %s" % (
-                len(self.mines_busted), len(self._mines)))
+        # Displaying final score
+        window.title("You finished with %s tripped mines. Final score %s" % (
+            len(self.mines_busted), len(self.flagged) / len(self._mines)))
         window.mainloop()
 
     def refresh(self, xy, squares):

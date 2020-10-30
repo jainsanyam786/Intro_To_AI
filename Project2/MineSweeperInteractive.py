@@ -110,7 +110,7 @@ class MineSweeperInteractive:
         else:
             return math.floor(0.50 * (self.size ** 2))
 
-# Agent 1 code
+    # Agent 1 code
     def updateinformation(self):
         """
         updates the information for the cells in the board
@@ -163,7 +163,7 @@ class MineSweeperInteractive:
         # Based on updated information, calling method to generate hint
         return self.generatehint()
 
-# Agent 2 code starts
+    # Agent 2 code starts
     def constraintsolver(self):
         """
         function to implement the constraint solver using knowledge base
@@ -174,19 +174,8 @@ class MineSweeperInteractive:
         if listconst:
             listconst = self.trivialcase(listconst)
             if listconst:
-                listconst = self.subtractconstraint(listconst, 0)
-                print(self.safe)
-                print(self.flagged)
-                if listconst:
-                    print(listconst)
-                    print("Inside adding")
-                    addingList = self.commonmatrix(listconst)
-                    print("added constraint" + str(addingList))
-                    listconst = self.addconstraints(listconst, addingList)
-                    print("after addition" + str(listconst))
-                    self.subtractconstraint(listconst, 0)
-                    print(self.safe)
-                    print(self.flagged)
+                self.subtractconstraint(listconst, 0)
+
         # if generate hint using safe list
         return self.generatehint()
 
@@ -316,39 +305,6 @@ class MineSweeperInteractive:
                 updates = updates + 1
         return updates
 
-    def commonmatrix(self, listConstraint):
-        commomMatrix = np.zeros((len(listConstraint), len(listConstraint)), dtype=int)
-        addinglist = []
-        for i, eq1 in enumerate(listConstraint):
-            for j, eq2 in enumerate(listConstraint):
-                if i != j:
-                    S1 = set(eq1.get("const"))
-                    S2 = set(eq2.get("const"))
-                    if S1.intersection(S2):
-                        commomMatrix[i][j] = 1
-        for j in range(commomMatrix.shape[1]):
-            toadd = set()
-            for i in range(commomMatrix.shape[0]):
-                if i != j:
-                    if commomMatrix[i][j] == 1:
-                        toadd.add(i)
-            if len(toadd) > 1:
-                addinglist.append(toadd)
-        return addinglist
-
-    def addconstraints(self, listConstraint, addinglist):
-        addedconstraint = []
-        for sets in addinglist:
-            newconstraint = set()
-            newvalue = 0
-            for i in sets:
-                newconstraint = newconstraint.union(set(listConstraint[i].get("const")))
-                newvalue = newvalue + listConstraint[i].get("val")
-            newconstraint = list(sorted(newconstraint))
-            addedconstraint.append({'const': newconstraint, 'val': newvalue})
-        [listConstraint.append(i) for i in addedconstraint]
-        return listConstraint
-
     def generatehint(self):
         """
         function to generate a hint for the game to proceed
@@ -367,7 +323,7 @@ class MineSweeperInteractive:
         self.suggestedstep = (step, rand)
         return step, rand
 
-# Agent 3 and 4 code starts
+    # Agent 3 and 4 code starts
     def setvariables(self, constr):
         """
         function to extract the variables from the constraint equations
@@ -386,7 +342,7 @@ class MineSweeperInteractive:
         """
         returns the set of solutions for the constraint equations
         """
-        solutions = self.solutions.copy()       # copies the set of solutions to another variable
+        solutions = self.solutions.copy()  # copies the set of solutions to another variable
         self.solutions.clear()
         return solutions
 
@@ -400,12 +356,12 @@ class MineSweeperInteractive:
         """
         function to implement the backtracking search
         """
-        self.constraints = self.createconstraint()      # create the constraint equations for the board
-        self.setvariables(self.getconstraint())         # extract the corresponding variables from the equations
+        self.constraints = self.createconstraint()  # create the constraint equations for the board
+        self.setvariables(self.getconstraint())  # extract the corresponding variables from the equations
         # for the triply improved agent
         if self.mode == 4:
             self.getvardictionary()
-        self.recursivebacktracking({})      # recursively backtrack
+        self.recursivebacktracking({})  # recursively backtrack
 
     def recursivebacktracking(self, assignment):
         """
@@ -414,10 +370,10 @@ class MineSweeperInteractive:
         #
         if len(assignment.keys()) == len(self.variables):
             return assignment
-        if self.mode == 3:      # for the doubly improved agent
+        if self.mode == 3:  # for the doubly improved agent
             # remove the first element from the list of all variables
             var = sorted(list(self.variables - assignment.keys())).pop(0)
-        elif self.mode == 4:        # for the triply improved agent
+        elif self.mode == 4:  # for the triply improved agent
             var = self.customgetvar(assignment)
         # for each value (0 - safe, 1 - mine)
         for value in [0, 1]:
@@ -425,7 +381,7 @@ class MineSweeperInteractive:
             assignment.update({var: value})
             # check if the constraint is satisfied
             c = self.check_constraint(assignment)
-            if c:   # if it is satisfied
+            if c:  # if it is satisfied
                 # recursively check the assignment with the constaint
                 result = self.recursivebacktracking(assignment)
                 # if successful
@@ -434,7 +390,7 @@ class MineSweeperInteractive:
                     self.appendsolution(result.copy())
             # otherwise remove that variable from the assignment
             assignment.pop(var)
-        return "failure"        # return failure
+        return "failure"  # return failure
 
     def check_constraint(self, assignment):
         """
@@ -459,19 +415,19 @@ class MineSweeperInteractive:
                     const.get("const").remove(v)
                     # decrement the value of the variable by 1
                     const["val"] = const.get("val") - 1
-                    if const.get("val") < 0:    # if the value at the RHS of the equation is negative, constraint fails
+                    if const.get("val") < 0:  # if the value at the RHS of the equation is negative, constraint fails
                         return False
-        return True         # otherwise, constraint check is a success
+        return True  # otherwise, constraint check is a success
 
     def giveprobability(self):
         """
         function to give the probability of the cells
         """
         result = self.getsolutions()
-        deno = len(result)      # denominator, denoting the total number of neighbors
+        deno = len(result)  # denominator, denoting the total number of neighbors
         dictprob = {}
-        solArray = np.zeros((len(result), len(self.variables)), int)        # initialize the solution array
-        if self.mode == 4:      # for triply improved agent
+        solArray = np.zeros((len(result), len(self.variables)), int)  # initialize the solution array
+        if self.mode == 4:  # for triply improved agent
             solArray = self.validsolution(solArray)
         if result:  # if solution exists
             # run for all the keys in result
@@ -481,7 +437,7 @@ class MineSweeperInteractive:
             # get the probabilities of the neighbors for the cell, rounded to 2 places after the decimal
             for i, var in enumerate(result[0]):
                 prob = round(np.sum(solArray[:, i]) / deno, 2)
-                dictprob.update({var: prob})            # add the cell's probabiity to the dictionary and return
+                dictprob.update({var: prob})  # add the cell's probabiity to the dictionary and return
         return dictprob
 
     def processprobability(self, dictprob):
@@ -495,27 +451,27 @@ class MineSweeperInteractive:
                 # and the cell isn't marked yet, mark as safe
                 if cell not in self.safe:
                     self.data.get(cell)["status"] = "S"
-                    self.safe.append(cell)      # append to the existing list of safe cells
-            elif dictprob.get(cell) == 1:   # otherwise if the probability is 1
-                self.data.get(cell)["status"] = "M"     # mark as mine
-                self.flag(cell)         # mark as mine
-        if self.safe:                       # if cells exist in the safe list
-            nextstep = self.safe.pop(0)     # next step for the agent to take is the first element of the list
+                    self.safe.append(cell)  # append to the existing list of safe cells
+            elif dictprob.get(cell) == 1:  # otherwise if the probability is 1
+                self.data.get(cell)["status"] = "M"  # mark as mine
+                self.flag(cell)  # mark as mine
+        if self.safe:  # if cells exist in the safe list
+            nextstep = self.safe.pop(0)  # next step for the agent to take is the first element of the list
             step = nextstep
-            rand = 0        # implies that it is not a random step taken by the agent
-        elif not self.safe:     # if no cells exist in the safe list
-            if dictprob:        # if cells exist in the probability dictionary
-                minprob = min(dictprob.values())        # choose the cell with the minimum probability
+            rand = 0  # implies that it is not a random step taken by the agent
+        elif not self.safe:  # if no cells exist in the safe list
+            if dictprob:  # if cells exist in the probability dictionary
+                minprob = min(dictprob.values())  # choose the cell with the minimum probability
                 # filter all cells with that probability
                 res = list(filter(lambda x: dictprob[x] == minprob, dictprob))
-                step = res.pop(0)       # and take the first element from that list
+                step = res.pop(0)  # and take the first element from that list
                 rand = 2
-            else:       # otherwise
-                permittedsteps = self.cells - self.opened - self.flagged        # get the remaining cells
+            else:  # otherwise
+                permittedsteps = self.cells - self.opened - self.flagged  # get the remaining cells
                 step = random.choice(list(permittedsteps))  # and from these cells, choose one randomly
-                rand = 1        # implies that the agent has to take a random step
-        self.suggestedstep = (step, rand)       # defines the step that the agent has to take
-        return step, rand               # and return the step
+                rand = 1  # implies that the agent has to take a random step
+        self.suggestedstep = (step, rand)  # defines the step that the agent has to take
+        return step, rand  # and return the step
 
     def probabilisticsolver(self):
         """
@@ -523,9 +479,9 @@ class MineSweeperInteractive:
         """
         # call createconstraint to create constraints
         self.backtrackingsearch()
-        probabs = self.giveprobability()        # gets the probabilities of the neighbors
+        probabs = self.giveprobability()  # gets the probabilities of the neighbors
         print(probabs)
-        suggestion = self.processprobability(probabs)       # get the suggested step for the agent to go to next
+        suggestion = self.processprobability(probabs)  # get the suggested step for the agent to go to next
         return suggestion
 
     def validsolution(self, solArray):
@@ -617,6 +573,7 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
             button.config(command=clicked)
             self.refresh(xy)
         # Starting point suggestion
+
         self.suggestedstep = (random.choice(list(self.cells)), 1)
         self.displayhint(self.suggestedstep)
 
@@ -711,7 +668,8 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
 
     # Calling Win method from super class and refreshing the button
     def win(self):
-        self.message("You finished with %s tripped mines. Final score %s" % (len(self.mines_busted), len(self.flagged)/len(self._mines)))
+        self.message("You finished with %s tripped mines. Final score %s" % (
+            len(self.mines_busted), len(self.flagged) / len(self._mines)))
 
         for xy in self._mines - self.opened:
             self.refresh(xy)
@@ -772,4 +730,3 @@ def main(cls):
 if __name__ == '__main__':
     # Calling GUI of MinesweeperInteractive class
     main(MineSweeperInteractiveGUI)
-
