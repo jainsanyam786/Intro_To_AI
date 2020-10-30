@@ -165,7 +165,6 @@ class MineSweeper1(object):
             # get remaining cells excluding the opened and flagged cells
             permittedsteps = self.cells - self.opened - self.flagged  # get remaining cells excluding the opened and flagged cells
             step = random.choice(list(permittedsteps))  # from these cells, choose one randomly
-
         return step
 
     def win(self):

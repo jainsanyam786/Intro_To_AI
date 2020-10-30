@@ -4,6 +4,7 @@ import tkinter as tk
 import math
 import itertools
 import numpy as np
+import copy as cp
 
 # defaults to 1000, recursive AI might need more (e.g. 40x40 game)
 sys.setrecursionlimit(100000)
@@ -19,7 +20,9 @@ class MineSweeperInteractive:
         self.size = size
         self.mode = mode
         self.variables = set()
+        self.variabledic = {}
         self.solutions = []
+        self.constraints = []
 
         # Create minesweeper board
         self.cells = set((x, y)
@@ -107,6 +110,7 @@ class MineSweeperInteractive:
         else:
             return math.floor(0.50 * (self.size ** 2))
 
+# Agent 1 code
     def updateinformation(self):
         """
         updates the information for the cells in the board
@@ -159,6 +163,7 @@ class MineSweeperInteractive:
         # Based on updated information, calling method to generate hint
         return self.generatehint()
 
+# Agent 2 code starts
     def constraintsolver(self):
         """
         function to implement the constraint solver using knowledge base
@@ -168,7 +173,7 @@ class MineSweeperInteractive:
         # if listconst is not empty solve constraint
         if listconst:
             listconst = self.trivialcase(listconst)
-            listconst = self.subtractconstraint(listconst, 0)
+            self.subtractconstraint(listconst, 0)
         # if generate hint using safe list
         return self.generatehint()
 
@@ -312,25 +317,37 @@ class MineSweeperInteractive:
         self.suggestedstep = (step, rand)
         return step, rand
 
+# Agent 3 and 4 code starts
     def setvariables(self, constr):
+        self.variables.clear()
         for const in constr:
             [self.variables.add(i) for i in const.get("const")]
 
+    def getconstraint(self):
+        return cp.deepcopy(self.constraints)
+
     def getsolutions(self):
-        return self.solutions
+        solutions = self.solutions.copy()
+        self.solutions.clear()
+        return solutions
 
     def appendsolution(self, solution):
         self.solutions.append(solution)
 
     def backtrackingsearch(self):
-        self.setvariables(self.createconstraint())
-        print(self.variables)
+        self.constraints = self.createconstraint()
+        self.setvariables(self.getconstraint())
+        if self.mode == 4:
+            self.getvardictionary()
         self.recursivebacktracking({})
 
     def recursivebacktracking(self, assignment):
         if len(assignment.keys()) == len(self.variables):
             return assignment
-        var = sorted(list(self.variables - assignment.keys())).pop(0)
+        if self.mode == 3:
+            var = sorted(list(self.variables - assignment.keys())).pop(0)
+        elif self.mode == 4:
+            var = self.customgetvar(assignment)
         for value in [0, 1]:
             assignment.update({var: value})
             c = self.check_constraint(assignment)
@@ -342,7 +359,7 @@ class MineSweeperInteractive:
         return "failure"
 
     def check_constraint(self, assignment):
-        csp2 = self.createconstraint()
+        csp2 = self.getconstraint()
         for v in assignment:
             for const in csp2:
                 if v in const.get("const") and assignment.get(v) == 0:
@@ -357,17 +374,18 @@ class MineSweeperInteractive:
         return True
 
     def giveprobability(self):
-        print(self.getsolutions())
         result = self.getsolutions()
         deno = len(result)
         dictprob = {}
-        arrayw = np.zeros((len(result), len(self.variables)), int)
+        solArray = np.zeros((len(result), len(self.variables)), int)
+        if self.mode == 4:
+            solArray = self.validsolution(solArray)
         if result:
             for index, sol in enumerate(result):
-                arrayw[index] = [sol.get(i) for jndex, i in enumerate(sol)]
+                solArray[index] = [sol.get(i) for jndex, i in enumerate(sol)]
 
             for i, var in enumerate(result[0]):
-                prob = round(np.sum(arrayw[:, i]) / deno, 2)
+                prob = round(np.sum(solArray[:, i]) / deno, 2)
                 dictprob.update({var: prob})
         return dictprob
 
@@ -375,25 +393,27 @@ class MineSweeperInteractive:
         for cell in dictprob:
             if dictprob.get(cell) == 0:
                 if cell not in self.safe:
+                    self.data.get(cell)["status"] = "S"
                     self.safe.append(cell)
             elif dictprob.get(cell) == 1:
+                self.data.get(cell)["status"] = "M"
                 self.flag(cell)
-        print(self.safe)
-        print(self.flagged)
         if self.safe:
-            print("found safe")
             nextstep = self.safe.pop(0)
-            return nextstep, 0
-        if not self.safe:
+            step = nextstep
+            rand = 0
+        elif not self.safe:
             if dictprob:
                 minprob = min(dictprob.values())
                 res = list(filter(lambda x: dictprob[x] == minprob, dictprob))
-                print("best guess")
-                return res.pop(0), 2
+                step = res.pop(0)
+                rand = 2
             else:
                 permittedsteps = self.cells - self.opened - self.flagged
                 step = random.choice(list(permittedsteps))  # from these cells, choose one randomly
-                return step, 1
+                rand = 1
+        self.suggestedstep = (step, rand)
+        return step, rand
 
     def probabilisticsolver(self):
         """
@@ -404,8 +424,36 @@ class MineSweeperInteractive:
         probabs = self.giveprobability()
         print(probabs)
         suggestion = self.processprobability(probabs)
-        print(suggestion)
         return suggestion
+
+    def validsolution(self, solArray):
+        validSolArray = []
+        for i in range(solArray.shape[0]):
+            if np.sum(solArray[i, :]) <= (len(self._mines) - (len(self.flagged) + len(self.mines_busted))):
+                validSolArray.append(solArray[i, :])
+        return np.array(validSolArray)
+
+    def getvardictionary(self):
+        varsortdic = {}
+        variablesset = self.variables
+        for var in variablesset:
+            for const in self.getconstraint():
+                if var in const.get("const"):
+                    if var in varsortdic.keys():
+                        temp = varsortdic.get(var)
+                        varsortdic.update({var: (temp + const.get("val"))})
+                    else:
+                        varsortdic.update({var: const.get("val")})
+            self.variabledic = varsortdic
+
+    def customgetvar(self, assignments):
+        variabledic = cp.deepcopy(self.variabledic)
+        for var in assignments:
+            if var in variabledic:
+                variabledic.pop(var)
+        maxconstvar = max(variabledic.values())
+        res = list(filter(lambda x: variabledic[x] == maxconstvar, variabledic))
+        return res.pop(0)
 
 
 class MineSweeperInteractiveGUI(MineSweeperInteractive):
@@ -449,13 +497,14 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
                         self.safe.insert(0, self.suggestedstep[0])
                     elif selected != self.suggestedstep[0] and self.suggestedstep[1] != 0:
                         # for random suggestion removing the suggestion prompt
+                        print("reached")
                         self.squares[self.suggestedstep[0]].config(text=" ", fg=None, bg=self._default_button_bg)
 
                     if self.mode == 1:
                         self.updateinformation()
                     elif self.mode == 2:
                         self.constraintsolver()
-                    elif self.mode == 3:
+                    elif self.mode == 3 or self.mode == 4:
                         self.probabilisticsolver()
                 else:
                     self.win()
@@ -557,11 +606,8 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
 
     # Calling Win method from super class and refreshing the button
     def win(self):
-        trippedmines = len(self.mines_busted)
-        if trippedmines:
-            self.message("You finished with %s tripped mines. Total mines were %s" % (trippedmines, len(self._mines)))
-        else:
-            self.message("You won without tripping any mines :-)")
+        self.message("You finished with %s tripped mines. Final score %s" % (len(self.mines_busted), len(self.flagged)/len(self._mines)))
+
         for xy in self._mines - self.opened:
             self.refresh(xy)
         if self.empty_remaining > 0:
@@ -602,15 +648,17 @@ def main(cls):
     R1 = tk.Radiobutton(root, text="Basic", variable=var, value=1)
     canvas1.create_window(180, 200, window=R1)
     R2 = tk.Radiobutton(root, text="Knowledge Base", variable=var, value=2)
-    canvas1.create_window(209, 225, window=R2)
+    canvas1.create_window(210, 225, window=R2)
     R3 = tk.Radiobutton(root, text="Probablistic", variable=var, value=3)
-    canvas1.create_window(218, 250, window=R3)
+    canvas1.create_window(197, 250, window=R3)
+    R4 = tk.Radiobutton(root, text="Improved Probablistic", variable=var, value=4)
+    canvas1.create_window(223, 275, window=R4)
     # Starts game
 
     # Button with label "Lets Play", which starts the game
     button1 = tk.Button(text='Lets Play', command=startgame, bg='brown', fg='white',
                         font=('helvetica', 9, 'bold'))
-    canvas1.create_window(200, 300, window=button1)
+    canvas1.create_window(200, 325, window=button1)
     # This is to display start window
     root.mainloop()  # WINDOW BEFORE GAME WINDOW STARTS
 
