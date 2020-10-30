@@ -319,101 +319,153 @@ class MineSweeperInteractive:
 
 # Agent 3 and 4 code starts
     def setvariables(self, constr):
+        """
+        function to extract the variables from the constraint equations
+        """
         self.variables.clear()
         for const in constr:
             [self.variables.add(i) for i in const.get("const")]
 
     def getconstraint(self):
+        """
+        returns a particular constraint from the set of constraint equations
+        """
         return cp.deepcopy(self.constraints)
 
     def getsolutions(self):
-        solutions = self.solutions.copy()
+        """
+        returns the set of solutions for the constraint equations
+        """
+        solutions = self.solutions.copy()       # copies the set of solutions to another variable
         self.solutions.clear()
         return solutions
 
     def appendsolution(self, solution):
+        """
+        adds solution to the existing solutions
+        """
         self.solutions.append(solution)
 
     def backtrackingsearch(self):
-        self.constraints = self.createconstraint()
-        self.setvariables(self.getconstraint())
+        """
+        function to implement the backtracking search
+        """
+        self.constraints = self.createconstraint()      # create the constraint equations for the board
+        self.setvariables(self.getconstraint())         # extract the corresponding variables from the equations
+        # for the triply improved agent
         if self.mode == 4:
             self.getvardictionary()
-        self.recursivebacktracking({})
+        self.recursivebacktracking({})      # recursively backtrack
 
     def recursivebacktracking(self, assignment):
+        """
+        recursive function for backtracking search
+        """
+        #
         if len(assignment.keys()) == len(self.variables):
             return assignment
-        if self.mode == 3:
+        if self.mode == 3:      # for the doubly improved agent
+            # remove the first element from the list of all variables
             var = sorted(list(self.variables - assignment.keys())).pop(0)
-        elif self.mode == 4:
+        elif self.mode == 4:        # for the triply improved agent
             var = self.customgetvar(assignment)
+        # for each value (0 - safe, 1 - mine)
         for value in [0, 1]:
+            # update the current assignment with the variable and value
             assignment.update({var: value})
+            # check if the constraint is satisfied
             c = self.check_constraint(assignment)
-            if c:
+            if c:   # if it is satisfied
+                # recursively check the assignment with the constaint
                 result = self.recursivebacktracking(assignment)
+                # if successful
                 if result != "failure":
+                    # add a copy of the result to the existing solution
                     self.appendsolution(result.copy())
+            # otherwise remove that variable from the assignment
             assignment.pop(var)
-        return "failure"
+        return "failure"        # return failure
 
     def check_constraint(self, assignment):
+        """
+        checks if the assignment satisfies the constraint or not
+        """
+        # get the constraint
         csp2 = self.getconstraint()
+        # run for all the variables in assignment
         for v in assignment:
+            # iterate for all the constraints
             for const in csp2:
+                # if the variable exists in the constraint and its value is 0
                 if v in const.get("const") and assignment.get(v) == 0:
+                    # remove that variable from the constraint
                     const.get("const").remove(v)
+                    # if the number of the contraints is less than the value at the RHS of the equation, constraint fails
                     if len(const.get("const")) < const.get("val"):
                         return False
+                # if the variable exists in the constraint and it's value is 1
                 elif v in const.get("const") and assignment.get(v) == 1:
+                    # remove the variable from the constraint
                     const.get("const").remove(v)
+                    # decrement the value of the variable by 1
                     const["val"] = const.get("val") - 1
-                    if const.get("val") < 0:
+                    if const.get("val") < 0:    # if the value at the RHS of the equation is negative, constraint fails
                         return False
-        return True
+        return True         # otherwise, constraint check is a success
 
     def giveprobability(self):
+        """
+        function to give the probability of the cells
+        """
         result = self.getsolutions()
-        deno = len(result)
+        deno = len(result)      # denominator, denoting the total number of neighbors
         dictprob = {}
-        solArray = np.zeros((len(result), len(self.variables)), int)
-        if self.mode == 4:
+        solArray = np.zeros((len(result), len(self.variables)), int)        # initialize the solution array
+        if self.mode == 4:      # for triply improved agent
             solArray = self.validsolution(solArray)
-        if result:
+        if result:  # if solution exists
+            # run for all the keys in result
             for index, sol in enumerate(result):
+                # extract the values of the keys in the solution dictionary
                 solArray[index] = [sol.get(i) for jndex, i in enumerate(sol)]
-
+            # get the probabilities of the neighbors for the cell, rounded to 2 places after the decimal
             for i, var in enumerate(result[0]):
                 prob = round(np.sum(solArray[:, i]) / deno, 2)
-                dictprob.update({var: prob})
+                dictprob.update({var: prob})            # add the cell's probabiity to the dictionary and return
         return dictprob
 
     def processprobability(self, dictprob):
+        """
+        function to update the status of the cells (if undiscovered) and decide the next step for the agent to take
+        """
+        # run for all the neighbors' probabilities
         for cell in dictprob:
+            # if the probability is 0
             if dictprob.get(cell) == 0:
+                # and the cell isn't marked yet, mark as safe
                 if cell not in self.safe:
                     self.data.get(cell)["status"] = "S"
-                    self.safe.append(cell)
-            elif dictprob.get(cell) == 1:
-                self.data.get(cell)["status"] = "M"
-                self.flag(cell)
-        if self.safe:
-            nextstep = self.safe.pop(0)
+                    self.safe.append(cell)      # append to the existing list of safe cells
+            elif dictprob.get(cell) == 1:   # otherwise if the probability is 1
+                self.data.get(cell)["status"] = "M"     # mark as mine
+                self.flag(cell)         # mark as mine
+        if self.safe:                       # if cells exist in the safe list
+            nextstep = self.safe.pop(0)     # next step for the agent to take is the first element of the list
             step = nextstep
-            rand = 0
-        elif not self.safe:
-            if dictprob:
-                minprob = min(dictprob.values())
+            rand = 0        # implies that it is not a random step taken by the agent
+        elif not self.safe:     # if no cells exist in the safe list
+            if dictprob:        # if cells exist in the probability dictionary
+                minprob = min(dictprob.values())        # choose the cell with the minimum probability
+                # filter all cells with that probability
                 res = list(filter(lambda x: dictprob[x] == minprob, dictprob))
-                step = res.pop(0)
+                step = res.pop(0)       # and take the first element from that list
                 rand = 2
-            else:
-                permittedsteps = self.cells - self.opened - self.flagged
-                step = random.choice(list(permittedsteps))  # from these cells, choose one randomly
-                rand = 1
-        self.suggestedstep = (step, rand)
-        return step, rand
+            else:       # otherwise
+                permittedsteps = self.cells - self.opened - self.flagged        # get the remaining cells
+                step = random.choice(list(permittedsteps))  # and from these cells, choose one randomly
+                rand = 1        # implies that the agent has to take a random step
+        self.suggestedstep = (step, rand)       # defines the step that the agent has to take
+        return step, rand               # and return the step
 
     def probabilisticsolver(self):
         """
@@ -421,12 +473,15 @@ class MineSweeperInteractive:
         """
         # call createconstraint to create constraints
         self.backtrackingsearch()
-        probabs = self.giveprobability()
+        probabs = self.giveprobability()        # gets the probabilities of the neighbors
         print(probabs)
-        suggestion = self.processprobability(probabs)
+        suggestion = self.processprobability(probabs)       # get the suggested step for the agent to go to next
         return suggestion
 
     def validsolution(self, solArray):
+        """
+
+        """
         validSolArray = []
         for i in range(solArray.shape[0]):
             if np.sum(solArray[i, :]) <= (len(self._mines) - (len(self.flagged) + len(self.mines_busted))):
