@@ -1,4 +1,3 @@
-import itertools
 import random
 import sys
 import tkinter as tk
@@ -20,9 +19,11 @@ class MineSweeper3(object):
     """
 
     # Constructor with 1 argument, size of minesweeper
-    def __init__(self, size, mode):
+    def __init__(self, size, mdensity, agent, mode):
         self.size = size
         self.mode = mode
+        self.agent = agent
+        self.mdensity = mdensity
         self.variables = set()
         self.variabledic = {}
         self.solutions = []
@@ -104,18 +105,9 @@ class MineSweeper3(object):
 
     def getmines(self):
         """
-        Returns number of mines based on the user input size of the maze
+        returns the number of mines based on the user input size of the minesweeper board
         """
-        if self.size < 20:
-            return math.floor(0.25 * (self.size ** 2))
-        elif 20 <= self.size < 40:
-            return math.floor(0.30 * (self.size ** 2))
-        elif 40 <= self.size < 60:
-            return math.floor(0.35 * (self.size ** 2))
-        elif 60 <= self.size < 100:
-            return math.floor(0.40 * (self.size ** 2))
-        else:
-            return math.floor(0.50 * (self.size ** 2))
+        return math.floor(self.mdensity * (self.size ** 2))
 
     def createconstraint(self):
         """
@@ -163,7 +155,7 @@ class MineSweeper3(object):
     def backtrackingsearch(self):
         self.constraints = self.createconstraint()
         self.setvariables(self.getconstraint())
-        if self.mode == 4:
+        if self.agent == "IP":
             self.getvardictionary()
         self.recursivebacktracking({})
 
@@ -204,7 +196,7 @@ class MineSweeper3(object):
         deno = len(result)
         dictprob = {}
         solArray = np.zeros((len(result), len(self.variables)), int)
-        if self.mode == 4:
+        if self.agent == "IP":
             solArray = self.validsolution(solArray)
         if result:
             for index, sol in enumerate(result):
@@ -431,6 +423,8 @@ def main(cls):
         result = {}
         sizes = [30, 40, 50, 60]
         mdenisty = 0.40
+        # (P:Probabilictic / IP:Improved Probabilistic)
+        agent = "IP"
         iterations = 5
         print("Generating Data")
         # for the sizes defined above
@@ -445,7 +439,7 @@ def main(cls):
             meantimetaken = 0
             # Plays the game "iterations" number of times
             for i in range(0, iterations):
-                game = cls(size, mdenisty, "A")
+                game = cls(size, mdenisty, agent, "A")
                 tmines, tflagged, tbusted, timetaken = game.letsplay()
                 # Update meanmines, meanflagged, meanbusted, meantimetaken accordingly
                 meanmines += tmines
@@ -465,7 +459,8 @@ def main(cls):
         # Ask user for input size
         size = int(input("Enter the size "))
         mdensity = float(input("Enter the mine density (0 - 1) "))
-        game = cls(size, mdensity, "T")
+        agent = input("Enter the Agent type (P:Probabilictic/IP:Improved Probabilistic) ")
+        game = cls(size, mdensity, agent, "T")
         # Play the game and display the board
         game.letsplay()
         game.display()

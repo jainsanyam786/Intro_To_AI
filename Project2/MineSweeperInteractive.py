@@ -173,7 +173,20 @@ class MineSweeperInteractive:
         # if listconst is not empty solve constraint
         if listconst:
             listconst = self.trivialcase(listconst)
-            self.subtractconstraint(listconst, 0)
+            if listconst:
+                listconst = self.subtractconstraint(listconst, 0)
+                print(self.safe)
+                print(self.flagged)
+                if listconst:
+                    print(listconst)
+                    print("Inside adding")
+                    addingList = self.commonmatrix(listconst)
+                    print("added constraint" + str(addingList))
+                    listconst = self.addconstraints(listconst, addingList)
+                    print("after addition" + str(listconst))
+                    self.subtractconstraint(listconst, 0)
+                    print(self.safe)
+                    print(self.flagged)
         # if generate hint using safe list
         return self.generatehint()
 
@@ -243,8 +256,8 @@ class MineSweeperInteractive:
                     if fl in c.get("const"):
                         c.get("const").remove(fl)
                         c["val"] = c.get("val") - 1
-            # removing duplicates if reduction result in duplicates
-            lc = [i for n, i in enumerate(lc) if i not in lc[n + 1:]]
+            # removing duplicates and empty constrints if reduction result in duplicates and empty
+            lc = [const for index, const in enumerate(lc) if const not in lc[index + 1:] and const.get('const')]
             # calling trivial case on updated list
             lc = self.trivialcase(lc)
         return lc
@@ -263,17 +276,17 @@ class MineSweeperInteractive:
             if S1.intersection(S2):
                 # if value for constraint first is greater than constraint second
                 if x.get("val") > y.get("val"):
-                    self.updateconst(x, y, lc, updates)
+                    updates = self.updateconst(x, y, lc, updates)
                 # if value for constraint second is greater than constraint first
                 elif x.get("val") < y.get("val"):
-                    self.updateconst(y, x, lc, updates)
+                    updates = self.updateconst(y, x, lc, updates)
                 else:
                     if S2.issubset(S1) and len(S2) > y.get("val"):
                         updates = self.updateconst(x, y, lc, updates)
                     elif S1.issubset(S2) and len(S1) > x.get("val"):
                         updates = self.updateconst(y, x, lc, updates)
-
         # if some updates were made then call trivial case and then subtractconstraint
+
         if updates != 0:
             lc = self.trivialcase(lc)
             lc = self.subtractconstraint(lc, 0)
@@ -297,7 +310,44 @@ class MineSweeperInteractive:
             if {"const": sorted(neg), "val": 0} not in uc and len(neg) != 0:
                 uc.append({"const": sorted(neg), "val": 0})
                 updates = updates + 1
+        elif len(neg) == 0 and maxs.get("val") == mins.get("val") and len(pos) > 0:
+            if {"const": sorted(pos), "val": maxs.get("val") - mins.get("val")} not in uc:
+                uc.append({"const": sorted(pos), "val": 0})
+                updates = updates + 1
         return updates
+
+    def commonmatrix(self, listConstraint):
+        commomMatrix = np.zeros((len(listConstraint), len(listConstraint)), dtype=int)
+        addinglist = []
+        for i, eq1 in enumerate(listConstraint):
+            for j, eq2 in enumerate(listConstraint):
+                if i != j:
+                    S1 = set(eq1.get("const"))
+                    S2 = set(eq2.get("const"))
+                    if S1.intersection(S2):
+                        commomMatrix[i][j] = 1
+        for j in range(commomMatrix.shape[1]):
+            toadd = set()
+            for i in range(commomMatrix.shape[0]):
+                if i != j:
+                    if commomMatrix[i][j] == 1:
+                        toadd.add(i)
+            if len(toadd) > 1:
+                addinglist.append(toadd)
+        return addinglist
+
+    def addconstraints(self, listConstraint, addinglist):
+        addedconstraint = []
+        for sets in addinglist:
+            newconstraint = set()
+            newvalue = 0
+            for i in sets:
+                newconstraint = newconstraint.union(set(listConstraint[i].get("const")))
+                newvalue = newvalue + listConstraint[i].get("val")
+            newconstraint = list(sorted(newconstraint))
+            addedconstraint.append({'const': newconstraint, 'val': newvalue})
+        [listConstraint.append(i) for i in addedconstraint]
+        return listConstraint
 
     def generatehint(self):
         """
@@ -722,3 +772,4 @@ def main(cls):
 if __name__ == '__main__':
     # Calling GUI of MinesweeperInteractive class
     main(MineSweeperInteractiveGUI)
+

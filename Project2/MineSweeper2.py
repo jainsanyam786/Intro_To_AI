@@ -163,7 +163,7 @@ class MineSweeper2(object):
                     if fl in c.get("const"):
                         c.get("const").remove(fl)
                         c["val"] = c.get("val") - 1
-            lc = [i for n, i in enumerate(lc) if i not in lc[n + 1:]]
+            lc = [const for index, const in enumerate(lc) if i not in lc[index + 1:] and i.get('const')]
             lc = self.trivialcase(lc)
         return lc
 
@@ -173,10 +173,10 @@ class MineSweeper2(object):
             S2 = set(y.get("const"))
             if S1.intersection(S2):
                 if x.get("val") > y.get("val"):
-                    self.updateconst(x, y, lc, updates)
+                    updates = self.updateconst(x, y, lc, updates)
 
                 elif x.get("val") < y.get("val"):
-                    self.updateconst(y, x, lc, updates)
+                    updates = self.updateconst(y, x, lc, updates)
             else:
                 if S2.issubset(S1) and len(S2) > y.get("val"):
                     updates = self.updateconst(x, y, lc, updates)
@@ -198,6 +198,10 @@ class MineSweeper2(object):
                 updates = updates + 1
             if {"const": sorted(neg), "val": 0} not in uc and len(neg) != 0:
                 uc.append({"const": sorted(neg), "val": 0})
+                updates = updates + 1
+        elif len(neg) == 0 and maxs.get("val") == mins.get("val") and len(pos) > 0:
+            if {"const": sorted(pos), "val": maxs.get("val") - mins.get("val")} not in uc:
+                uc.append({"const": sorted(pos), "val": 0})
                 updates = updates + 1
         return updates
 
