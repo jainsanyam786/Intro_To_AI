@@ -96,21 +96,6 @@ def disp_data(data, varnames, xlable, ylabel, title, index):
     ax1.grid(True)
 
 
-A = {10: {0.2: {'Basic': [0.81, 11.16], 'KnowledgeBased': [0.905, 11.54], 'Probabilistic': [0.905, 353.07],
-                'Improved Probabilistic': [0.925, 434.44]},
-          0.3: {'Basic': [0.727, 9.37], 'KnowledgeBased': [0.763, 12.03],
-                'Probabilistic': [0.88, 336.12], 'Improved Probabilistic': [0.883, 533.48]}}}
-
-B = {5: {0.4: {'Basic': [0.56, 1.0], 'KnowledgeBased': [0.64, 0.2], 'Probabilistic': [0.66, 62.45],
-               'Improved Probabilistic': [0.8, 29.32]}}, 7: {0.4: {'Basic': [0.516, 1.99],
-                                                                   'KnowledgeBased': [0.642, 2.2],
-                                                                   'Probabilistic': [0.674, 314.95],
-                                                                   'Improved Probabilistic': [0.653, 223.97]}},
-     10: {0.4: {'Basic': [0.61, 7.78],
-                'KnowledgeBased': [0.615, 10.59], 'Probabilistic': [0.84, 390.16],
-                'Improved Probabilistic': [0.765, 360.57]}}}
-
-
 def reducedata(data, sizes, minedensities):
     dataToPlot = {}
     if len(sizes) == 1:
