@@ -71,7 +71,8 @@ class MineSweeper3(object):
         """
         if xy in self.opened:       # if the cell is already opened, do nothing
             return
-
+        # After opening the block, if the block is not already present in the opened set.
+        # Then below condition will add it
         self.opened.add(xy)  # add to the list of opened cells
         if xy in self._mines:  # if mine, update status to M
             self.mines_busted.add(xy)       # add the opened cell to the mines busted list
