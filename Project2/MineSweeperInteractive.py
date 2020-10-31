@@ -427,14 +427,14 @@ class MineSweeperInteractive:
         deno = len(result)  # denominator, denoting the total number of neighbors
         dictprob = {}
         solArray = np.zeros((len(result), len(self.variables)), int)  # initialize the solution array
-        if self.mode == 4:  # for triply improved agent
-            solArray = self.validsolution(solArray)
         if result:  # if solution exists
             # run for all the keys in result
             for index, sol in enumerate(result):
                 # extract the values of the keys in the solution dictionary
                 solArray[index] = [sol.get(i) for jndex, i in enumerate(sol)]
             # get the probabilities of the neighbors for the cell, rounded to 2 places after the decimal
+            if self.mode == 4:  # for triply improved agent
+                solArray = self.validsolution(solArray)
             for i, var in enumerate(result[0]):
                 prob = round(np.sum(solArray[:, i]) / deno, 2)
                 dictprob.update({var: prob})  # add the cell's probabiity to the dictionary and return

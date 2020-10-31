@@ -194,11 +194,12 @@ class MineSweeper3(object):
         deno = len(result)
         dictprob = {}
         solArray = np.zeros((len(result), len(self.variables)), int)
-        if self.agent == "IP":
-            solArray = self.validsolution(solArray)
         if result:
             for index, sol in enumerate(result):
                 solArray[index] = [sol.get(i) for jndex, i in enumerate(sol)]
+
+            if self.mode == "IP":  # for triply improved agent
+                solArray = self.validsolution(solArray)
 
             for i, var in enumerate(result[0]):
                 prob = round(np.sum(solArray[:, i]) / deno, 2)
@@ -404,8 +405,8 @@ def main(cls):
     # if mode is Analysis
     if "analysis".casefold().__eq__(Mode.casefold()):
         result = {}
-        sizes = [30, 40, 50, 60]
-        mdenisty = 0.40
+        sizes = [8, 10, 12, 15]
+        mdenisty = 0.2
         # (P:Probabilictic / IP:Improved Probabilistic)
         agent = "IP"
         iterations = 5

@@ -230,8 +230,6 @@ class MineSweeper2(object):
                 len(self.mines_busted), len(self.flagged) / len(self._mines)))
 
 
-
-
 class MineSweeper2Play(MineSweeper2):
     """
     Play the Minesweeper game!
@@ -399,7 +397,7 @@ def main(cls):
         game = cls(size, mdensity, "T")
         # Play the game and display the board
         game.letsplay()
-        game.display()
+        # game.display()
 
 
 if __name__ == '__main__':
