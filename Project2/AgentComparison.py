@@ -44,8 +44,6 @@ def comparison4(sizes, minedensities, iterations):
             scorefor4 = 0
             time4 = 0
             for iter in range(iterations):
-                print(size)
-                print(minedensity)
                 agent1 = ms1.MineSweeperPlay(size, minedensity, "A")
                 result1 = agent1.letsplay()
                 scorefor1 = scorefor1 + result1[1] / result1[0]
