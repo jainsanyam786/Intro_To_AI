@@ -6,10 +6,17 @@ import itertools
 import numpy as np
 import copy as cp
 
+"""
+USER i.e You will be playing this game using this class
+This class contains all the agents, helps in comparing the agents and visualization
+This is where the user will get hints and Calculated data to take the next step required
+"""
+
 # defaults to 1000, recursive AI might need more (e.g. 40x40 game)
 sys.setrecursionlimit(100000)
 
 
+# In this class, Actual computation and minesweeper generation takes place
 class MineSweeperInteractive:
     """
     In this class, Actual computation and minesweeper generation takes place
@@ -62,6 +69,8 @@ class MineSweeperInteractive:
         # keeping track of suggestions initialized with 1 signifies it is random
         self.suggestedstep = ((-1, -1), 1)
 
+    # Here Initialization of mouse click takes place. And upon recognizing the closed square whether it is safe or mine,
+    # the element is added in the respective set. Updating data set is also included
     def open(self, xy):
         """
         Opens the cell at x, y location and checks if it is a mine or safe
@@ -81,12 +90,14 @@ class MineSweeperInteractive:
             # Reducing the number of empty mines
             self.empty_remaining -= 1
 
+    # Flagging, adds the element to flagged list
     def flag(self, xy):
         """
         Flags the cell xy
         """
         self.flagged.add(xy)
 
+    # Returns the list of neighbors for the specific cells
     def getneighbour(self, x, y):
         """
         returns list of neighbors for the cell (x, y)
@@ -95,6 +106,7 @@ class MineSweeperInteractive:
                     (nx, ny) in self.cells)
         return neigh
 
+    # Mines configuration is here, number of mines are selected on the bases of maze sizes
     def getmines(self):
         """
         Returns number of mines based on the user input size of the maze
@@ -179,6 +191,7 @@ class MineSweeperInteractive:
         # if generate hint using safe list
         return self.generatehint()
 
+    # updates the constraint for the cells in the board
     def createconstraint(self):
         """
         updates the constraint for the cells in the board
@@ -206,9 +219,12 @@ class MineSweeperInteractive:
         # Based on updated information, calling method to generate hint
         return listconst
 
+    # function to identify and solve trivial constraint. if cells are identified they are used to reduce the other
+    # constraints and then constraints are solved again. This is repeated till no cells are identified
+    # "lc" is list of constraints
     def trivialcase(self, lc):
         """
-        function to indentiufy and solve trivial constraint. if cells are identified they are used to reduce the other
+        function to identify and solve trivial constraint. if cells are identified they are used to reduce the other
         constraints and then constraints are solved again. This is repeated till no cells are identified
         """
         trivial = []
@@ -251,6 +267,9 @@ class MineSweeperInteractive:
             lc = self.trivialcase(lc)
         return lc
 
+    #  function iterate over constraints and subtract them to reduce them to trivial case
+    #  if trivial cases are identified after calling updateconst then trivialcase function is called
+    #  to solve those, these method is also called recursively till no updates are found
     def subtractconstraint(self, lc, updates):
         """
         function iterate over constraints and subtract them to reduce them to trivial case
@@ -275,12 +294,13 @@ class MineSweeperInteractive:
                     elif S1.issubset(S2) and len(S1) > x.get("val"):
                         updates = self.updateconst(y, x, lc, updates)
         # if some updates were made then call trivial case and then subtractconstraint
-
+        # "lc" is list of constraints
         if updates != 0:
             lc = self.trivialcase(lc)
             lc = self.subtractconstraint(lc, 0)
         return lc
 
+    #  function solve two given constraint to reduce them into trivial constraint.
     def updateconst(self, maxs, mins, uc, updates):
         """
         function solve two given constraint to reduce them into trivial constraint.
@@ -305,6 +325,7 @@ class MineSweeperInteractive:
                 updates = updates + 1
         return updates
 
+    # function to generate a hint for the game to proceed
     def generatehint(self):
         """
         function to generate a hint for the game to proceed
@@ -324,6 +345,8 @@ class MineSweeperInteractive:
         return step, rand
 
     # Agent 3 and 4 code starts
+
+    # function to extract the variables from the constraint equations
     def setvariables(self, constr):
         """
         function to extract the variables from the constraint equations
@@ -332,12 +355,14 @@ class MineSweeperInteractive:
         for const in constr:
             [self.variables.add(i) for i in const.get("const")]
 
+    #  returns a particular constraint from the set of constraint equations
     def getconstraint(self):
         """
         returns a particular constraint from the set of constraint equations
         """
         return cp.deepcopy(self.constraints)
 
+    # returns the set of solutions for the constraint equations
     def getsolutions(self):
         """
         returns the set of solutions for the constraint equations
@@ -346,12 +371,15 @@ class MineSweeperInteractive:
         self.solutions.clear()
         return solutions
 
+    # adds solution to the existing solutions
     def appendsolution(self, solution):
         """
         adds solution to the existing solutions
         """
         self.solutions.append(solution)
 
+    # function to implement the backtracking search
+    # This is used in triply improved agent to back track the elements
     def backtrackingsearch(self):
         """
         function to implement the backtracking search
@@ -360,9 +388,12 @@ class MineSweeperInteractive:
         self.setvariables(self.getconstraint())  # extract the corresponding variables from the equations
         # for the triply improved agent
         if self.mode == 4:
-            self.getvardictionary()
+            self.getvardictionary()  # Stores variable and the value of constraint
         self.recursivebacktracking({})  # recursively backtrack
 
+    #  recursive function for backtracking search
+    # This function is called from above function
+    # It recursively backtracks the elements and collect the constraints which satisfy the values assigned
     def recursivebacktracking(self, assignment):
         """
         recursive function for backtracking search
@@ -392,6 +423,7 @@ class MineSweeperInteractive:
             assignment.pop(var)
         return "failure"  # return failure
 
+    # checks if the assignment satisfies the constraint or not
     def check_constraint(self, assignment):
         """
         checks if the assignment satisfies the constraint or not
@@ -419,6 +451,7 @@ class MineSweeperInteractive:
                         return False
         return True  # otherwise, constraint check is a success
 
+    #  function to give the probability of the cells
     def giveprobability(self):
         """
         function to give the probability of the cells
@@ -440,6 +473,7 @@ class MineSweeperInteractive:
                 dictprob.update({var: prob})  # add the cell's probabiity to the dictionary and return
         return dictprob
 
+    # function to update the status of the cells (if undiscovered) and decide the next step for the agent to take
     def processprobability(self, dictprob):
         """
         function to update the status of the cells (if undiscovered) and decide the next step for the agent to take
@@ -473,6 +507,7 @@ class MineSweeperInteractive:
         self.suggestedstep = (step, rand)  # defines the step that the agent has to take
         return step, rand  # and return the step
 
+    # function to implement the probabilistic solver using knowledge base
     def probabilisticsolver(self):
         """
         function to implement the probablistic solver using knowledge base
@@ -484,16 +519,16 @@ class MineSweeperInteractive:
         suggestion = self.processprobability(probabs)  # get the suggested step for the agent to go to next
         return suggestion
 
+    # Finding valid solution and adding it into array
     def validsolution(self, solArray):
-        """
 
-        """
         validSolArray = []
         for i in range(solArray.shape[0]):
             if np.sum(solArray[i, :]) <= (len(self._mines) - (len(self.flagged) + len(self.mines_busted))):
                 validSolArray.append(solArray[i, :])
         return np.array(validSolArray)
 
+    # Collects the constraints and values
     def getvardictionary(self):
         varsortdic = {}
         variablesset = self.variables
@@ -507,6 +542,7 @@ class MineSweeperInteractive:
                         varsortdic.update({var: const.get("val")})
             self.variabledic = varsortdic
 
+    # Collects the assignment i.e the constraint variables and takes out max value and arranges it descending
     def customgetvar(self, assignments):
         variabledic = cp.deepcopy(self.variabledic)
         for var in assignments:
@@ -577,6 +613,7 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         self.suggestedstep = (random.choice(list(self.cells)), 1)
         self.displayhint(self.suggestedstep)
 
+    # Update GUI for given square
     def refresh(self, xy):
         """Update GUI for given square."""
         button = self.squares[xy]
@@ -594,6 +631,7 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
             self.message("%d Cells to go" %
                          len(self.cells - self.opened))
 
+    # Fetching Visual data for cell based on its status
     def getvisualdataforcell(self, xy):
         """
         Fetching Visual data for cell based on its status
@@ -646,11 +684,14 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         self.displayhint(step)
         return step
 
+    # Solving probability and calling displaying hints
     def probabilisticsolver(self):
         step = super(MineSweeperInteractiveGUI, self).probabilisticsolver()
         self.displayhint(step)
         return step
 
+    #  This method display the hint on mine sweeper hint will have test H if it is calculated suggetion.
+    #  if it is a random suggestion it will have R
     def displayhint(self, step):
         """
         This method display the hint on mine sweeper hint will have test H if it is calculated suggetion.
@@ -682,9 +723,10 @@ class MineSweeperInteractiveGUI(MineSweeperInteractive):
         self.window.title(string)
 
 
+# Main class which takes input from user and assigns to the element to display respective mazes
 def main(cls):
-    # Generate Starting window to get the size for minesweeper from USER
 
+    # Generate Starting window to get the size for minesweeper from USER
     def startgame():
         size = int(entry1.get())
         game = cls(size, var.get())
@@ -692,6 +734,7 @@ def main(cls):
         # This is to display game window
         game.window.mainloop()  # GAME WINDOW(MINESWEEPER WINDOW)
 
+    # Helps im creating widget for selection of the agent type and Play button
     root = tk.Tk()
     var = tk.IntVar()
     root.title("Let's Play Minesweeper")
