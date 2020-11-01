@@ -5,6 +5,7 @@ import MineSweeper3 as ms3
 
 
 def comparison2(sizes, minedensities, iterations):
+    print("Compare1")
     sizeData = {}
     for size in sizes:
         minedensitydata = {}
@@ -31,6 +32,7 @@ def comparison2(sizes, minedensities, iterations):
 
 
 def comparison4(sizes, minedensities, iterations):
+    print("Compare2")
     sizeData = {}
     for size in sizes:
         minedensitydata = {}
@@ -82,6 +84,7 @@ def disp_data(data, varnames, xlable, ylabel, title, index):
     :param ylabel: y label
     :param title: title
     """
+    print("display")
     fig = plt.figure()  # Initializing figure
     ax1 = fig.add_subplot()
     ax1.set_xlabel(xlable)
@@ -132,25 +135,18 @@ def plotdata():
 
     data3 = comparison4(s3, m1, iter)
     data3 = reducedata(data3, s1, m1)
-    disp_data(data3, ["Basic", "KnowledgeBased", "Probabilistic", "Improved Probabilistic"], "Sizes", "Score",
+    disp_data(data3, ["Basic", "KnowledgeBased", "Probabilistic", "Improved Probabilistic"], "Mine Density", "Score",
               "Size vs Score for mine density 0.4", 0)
-    disp_data(data3, ["Basic", "KnowledgeBased", "Probabilistic", "Improved Probabilistic"], "Sizes", "Time(ms)",
+    disp_data(data3, ["Basic", "KnowledgeBased", "Probabilistic", "Improved Probabilistic"], "Mine Density", "Time(ms)",
               "Size vs time for mine density 0.4", 1)
 
     data4 = comparison4(s4, m2, iter)
     data4 = reducedata(data4, s4, m2)
     disp_data(data4, ["Basic", "KnowledgeBased", "Probabilistic", "Improved Probabilistic"], "Sizes", "Score",
-              "Size vs Score Score for size 12", 0)
+              "Mine Density vs Score for size 12", 0)
     disp_data(data4, ["Basic", "KnowledgeBased", "Probabilistic", "Improved Probabilistic"], "Sizes", "Time(ms)",
-              "Size vs time for size 12", 1)
+              "Mine Density vs time for size 12", 1)
     plt.show()
 
 
 plotdata()
-
-# print(comparison2([50], [0.2, 0.3, 0.4, 0.5, 0.6], 10))
-# print(comparison4([5, 7, 10], [0.4], 5))
-
-# ms1 = ms1.MineSweeperPlay(10, 0.4, "A")
-# result = ms1.letsplay()
-# print(result)

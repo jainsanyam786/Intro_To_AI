@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import datetime as t
 from threading import Thread
 
-# defaults to 1000, recursive AI might need more (e.g. 40x40 game)
+# increasing recusrion limit
 sys.setrecursionlimit(100000)
 
 

@@ -7,7 +7,7 @@ import datetime as t
 import copy as cp
 import numpy as np
 
-# defaults to 1000, recursive AI might need more (e.g. 40x40 game)
+# increasing recusrion limit
 sys.setrecursionlimit(100000)
 
 
