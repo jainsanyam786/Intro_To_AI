@@ -515,7 +515,6 @@ class MineSweeperInteractive:
         # call createconstraint to create constraints
         self.backtrackingsearch()
         probabs = self.giveprobability()  # gets the probabilities of the neighbors
-        print(probabs)
         suggestion = self.processprobability(probabs)  # get the suggested step for the agent to go to next
         return suggestion
 

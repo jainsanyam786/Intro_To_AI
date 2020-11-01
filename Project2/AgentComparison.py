@@ -4,8 +4,8 @@ import MineSweeper2 as ms2
 import MineSweeper3 as ms3
 
 
+# Compare Agent 1 and Agent2
 def comparison2(sizes, minedensities, iterations):
-    print("Compare1")
     sizeData = {}
     for size in sizes:
         minedensitydata = {}
@@ -31,6 +31,7 @@ def comparison2(sizes, minedensities, iterations):
     return sizeData
 
 
+# Compare Agent 1,Agent2, Agent3 and Agent4
 def comparison4(sizes, minedensities, iterations):
     print("Compare2")
     sizeData = {}
@@ -74,6 +75,7 @@ def comparison4(sizes, minedensities, iterations):
     return sizeData
 
 
+# Plot data
 def disp_data(data, varnames, xlable, ylabel, title, index):
     """
     This method is used to visualize data by displaying the graph
@@ -99,6 +101,7 @@ def disp_data(data, varnames, xlable, ylabel, title, index):
     ax1.grid(True)
 
 
+# Extract dicionary to be plotted
 def reducedata(data, sizes, minedensities):
     dataToPlot = {}
     if len(sizes) == 1:
@@ -110,6 +113,7 @@ def reducedata(data, sizes, minedensities):
     return dataToPlot
 
 
+# Generate and Plot data for given sizes and mine density
 def plotdata():
     s1 = [20, 30, 40, 50, 60]
     m1 = [0.4]
