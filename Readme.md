@@ -3,3 +3,7 @@ This repository contains solution for all projects for coursework 16:198:520:01 
 Project 1 -> Exploring Search.
 >Part 1 -> This Maze is on Fire.
 >Part 2 -> Maze Thinning.
+
+Project 2 -> MineSweeper.
+>Part 1 -> Basic and KnowledgeBase based.
+>Part 2 -> Probabilistic and Improved Probabilistic.
