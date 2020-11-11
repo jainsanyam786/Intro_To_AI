@@ -12,7 +12,7 @@ This class contains all the agents, helps in comparing the agents and visualizat
 This is where the user will get hints and Calculated data to take the next step required
 """
 
-# defaults to 1000, recursive AI might need more (e.g. 40x40 game)
+# increasing recusrion limit
 sys.setrecursionlimit(100000)
 
 
@@ -515,7 +515,6 @@ class MineSweeperInteractive:
         # call createconstraint to create constraints
         self.backtrackingsearch()
         probabs = self.giveprobability()  # gets the probabilities of the neighbors
-        print(probabs)
         suggestion = self.processprobability(probabs)  # get the suggested step for the agent to go to next
         return suggestion
 
