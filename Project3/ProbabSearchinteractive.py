@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from matplotlib.colors import ListedColormap
+import copy as cp
 
 
 class ProbabilisticHunting:
@@ -31,7 +32,6 @@ class ProbabilisticHunting:
         num_arr = np.array(num)
         self.landscape = num_arr
         self.target = self.gettarget()
-        print(num_arr[self.target[0]][self.target[1]])
 
     # Landscape Display GUI based
     # Coloring based on the probabilities assigned to each block
@@ -51,6 +51,26 @@ class ProbabilisticHunting:
         ax.text(self.target[1], self.target[0], "X", ha="center", va="center", color="#990000", fontsize=20)
         ax.grid(color='k', linestyle='-', linewidth=2)
 
+    def getcelltosearch(self, valuedict, maxormin):
+        if maxormin:
+            value = max(valuedict.values())
+        else:
+            value = min(valuedict.values())
+        choices = list(filter(lambda x: valuedict[x] == value, valuedict))
+        tosearch = choices[randint(0, len(choices) - 1)]
+        return tosearch
+
+    def istargetfound(self, celltosearch, difficultprob):
+        success = 0
+        if celltosearch == self.target:
+            success = np.random.choice(np.arange(2), 1, p=[difficultprob, 1 - difficultprob])[0]
+        return success
+
+    def getobservation(self, cellsearched, difficultprob):
+        observation = 1 - self.targetLocprobabdict.get(cellsearched) + difficultprob * self.targetLocprobabdict.get(
+            cellsearched)
+        return observation
+
     # Updating initial probabilities database
     def probabilitydictionary(self):
         [[self.targetLocprobabdict.update({(x, y): (1 / self.size ** 2)}) for y in range(self.size)]
@@ -59,7 +79,8 @@ class ProbabilisticHunting:
     # Updating each instance of probability database as per object
     # This is based on Part 1, both the equations of the part 1 are implemented below to update the probabilities
     # required for all the agents
-    def updateprobabilities(self, tosearch, observation):
+    def updateprobabilities(self, tosearch, difficultprob):
+        observation = self.getobservation(tosearch, difficultprob)
         for cell in self.targetLocprobabdict.keys():
             if cell is tosearch:
                 p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
@@ -79,30 +100,100 @@ class ProbabilisticHunting:
         return targefoundprobabdict
 
     # Function used to get the total score, i.e total steps taken by each agent
-    def getcellscores(self,currentlocation):
-        targefoundprobabdict = {}
+    def getcellscores(self, currentlocation):
         cellscores = {}
-        for cell in self.targetLocprobabdict.keys():
-            foundprob = self.targetLocprobabdict.get(cell) * (
-                    1 - self.diffProbDict.get(self.landscape[cell[0]][cell[1]]))
-            targefoundprobabdict[cell] = foundprob
+        targefoundprobabdict = self.gettargetfoundprobabilities()
         maxprobcell = max(targefoundprobabdict.values())
         choices = list(filter(lambda x: targefoundprobabdict[x] == maxprobcell, targefoundprobabdict))
         for cell in choices:
-            score = (1 + (abs(currentlocation[0] - cell[0]) + abs(currentlocation[1] - cell[1])))/maxprobcell
-
+            score = (1 + (abs(currentlocation[0] - cell[0]) + abs(currentlocation[1] - cell[1]))) / maxprobcell
             cellscores[cell] = score
         return cellscores
+
+    def getcellusingonesteplookahead(self):
+        targefoundprobabdict = self.gettargetfoundprobabilities()
+        maxprobcell = max(targefoundprobabdict.values())
+        choices = list(filter(lambda x: targefoundprobabdict[x] == maxprobcell, targefoundprobabdict))
+        copylocprobdict = cp.deepcopy(self.targetLocprobabdict)
+        maxprob = 0
+        minmeanscore = 0
+        bestcells = {}
+        celltosearch = ()
+        for cell in choices:
+            prob, choices = self.onesteplookahead(cell, copylocprobdict)
+            if prob >= maxprob:
+                bestcells[cell] = {"prob": prob, "choices": choices}
+                maxprob = prob
+        for cell in bestcells.keys():
+            prob = bestcells.get(cell).get("prob")
+            choices = bestcells.get(cell).get("choices")
+            meanscore = np.mean([(1 + (abs(cell[0] - step[0]) + abs(cell[1] - step[1]))) / prob for step in choices])
+            if minmeanscore == 0 or meanscore < minmeanscore:
+                minmeanscore = meanscore
+                celltosearch = cell
+        return celltosearch
+
+    def onesteplookahead(self, cell, copylocprobdict):
+        tempprobdict = copylocprobdict
+        p = self.diffProbDict.get(self.landscape[cell[0]][cell[1]])
+        observation = self.getobservation(cell, p)
+        for c in tempprobdict.keys():
+            if c is cell:
+                prob = (self.targetLocprobabdict.get(cell) * p) / observation
+            else:
+                prob = self.targetLocprobabdict.get(cell) / observation
+            probtofind = prob * (1 - self.diffProbDict.get(self.landscape[c[0]][c[1]]))
+            tempprobdict.update({c: probtofind})
+        maxvalue = max(tempprobdict.values())
+        choices = list(filter(lambda x: tempprobdict[x] == maxvalue, tempprobdict))
+        return maxvalue, choices
+
+    def getcellusingonesteplookaheadscore(self, currentcell):
+        cellscores = self.getcellscores(currentcell)
+        minscore = min(cellscores.values())
+        choices = list(filter(lambda x: cellscores[x] == minscore, cellscores))
+        copylocprobdict = cp.deepcopy(self.targetLocprobabdict)
+        minmeanscore = 0
+        celltosearch = ()
+        for cell in choices:
+            meanscore = self.onesteplookaheadscore(cell, copylocprobdict)
+            if minmeanscore == 0 or meanscore < minmeanscore:
+                minmeanscore = meanscore
+                celltosearch = cell
+        return celltosearch
+
+    def getcellusingonesteplookaheadscorei(self):
+        copylocprobdict = cp.deepcopy(self.targetLocprobabdict)
+        minmeanscore = 0
+        celltosearch = ()
+        for cell in self.targetLocprobabdict.keys():
+            meanscore = self.onesteplookaheadscore(cell, copylocprobdict)
+            if minmeanscore == 0 or meanscore < minmeanscore:
+                minmeanscore = meanscore
+                celltosearch = cell
+        return celltosearch
+
+    def onesteplookaheadscore(self, cell, copylocprobdict):
+        tempprobdict = copylocprobdict
+        p = self.diffProbDict.get(self.landscape[cell[0]][cell[1]])
+        observation = self.getobservation(cell, p)
+        for c in tempprobdict.keys():
+            if c is cell:
+                prob = (self.targetLocprobabdict.get(cell) * p) / observation
+            else:
+                prob = self.targetLocprobabdict.get(cell) / observation
+            probtofind = prob * (1 - self.diffProbDict.get(self.landscape[c[0]][c[1]]))
+            tempprobdict.update({c: probtofind})
+        maxprobcell = max(tempprobdict.values())
+        choices = list(filter(lambda x: tempprobdict[x] == maxprobcell, tempprobdict))
+        meanscore = np.mean([(1 + (abs(cell[0] - step[0]) + abs(cell[1] - step[1]))) / prob for step in choices])
+        return meanscore
 
     def gamerule1(self):
         currentlocation = (-1, -1)
         actions = 0
-        # print(actions)
-        # print(self.targetLocprobabdict)
         while True:
-            maxprobcell = max(self.targetLocprobabdict.values())
-            choices = list(filter(lambda x: self.targetLocprobabdict[x] == maxprobcell, self.targetLocprobabdict))
-            tosearch = choices[randint(0, len(choices) - 1)]
+            tosearch = self.getcelltosearch(self.targetLocprobabdict, 1)
             # current location is best and is re-searched
             if currentlocation == tosearch:
                 actions += 1
@@ -110,18 +201,12 @@ class ProbabilisticHunting:
             else:
                 actions += 2
             p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
-            if tosearch == self.target:
-                success = np.random.choice(np.arange(2), 1, p=[p, 1 - p])[0]
-                if success:
-                    # print()
-                    # print(choices)
-                    return tosearch, actions
+            if self.istargetfound(tosearch, p):
+                return tosearch, actions
             # observation includes two chances target not being there or target not being found there even though it
             # was there
-            observation = 1 - self.targetLocprobabdict.get(tosearch) + p * self.targetLocprobabdict.get(tosearch)
+            self.updateprobabilities(tosearch, p)
             currentlocation = tosearch
-            # print(currentlocation,end = " ")
-            self.updateprobabilities(tosearch, observation)
 
     def gamerule2(self):
         currentlocation = (-1, -1)
@@ -130,9 +215,7 @@ class ProbabilisticHunting:
         # print(self.targetLocprobabdict)
         while True:
             targefoundprobabdict = self.gettargetfoundprobabilities()
-            maxprobcell = max(targefoundprobabdict.values())
-            choices = list(filter(lambda x: targefoundprobabdict[x] == maxprobcell, targefoundprobabdict))
-            tosearch = choices[randint(0, len(choices) - 1)]
+            tosearch = self.getcelltosearch(targefoundprobabdict, 1)
             # current location is best and is re-searched
             if currentlocation == tosearch:
                 actions += 1
@@ -140,29 +223,19 @@ class ProbabilisticHunting:
             else:
                 actions += 2
             p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
-            if tosearch == self.target:
-                success = np.random.choice(np.arange(2), 1, p=[p, 1 - p])[0]
-                if success:
-                    # print()
-                    # print(choices)
-                    return tosearch, actions
+            if self.istargetfound(tosearch, p):
+                return tosearch, actions
             # observation includes two chances target not being there or target not being found there even though it
             # was there
-            observation = 1 - self.targetLocprobabdict.get(tosearch) + p * self.targetLocprobabdict.get(tosearch)
-            self.updateprobabilities(tosearch, observation)
-            # print(currentlocation,end = " ")
+            self.updateprobabilities(tosearch, p)
             currentlocation = tosearch
 
     def gamerule3(self):
         currentlocation = (-1, -1)
         actions = 0
-        # print(actions)
-        # print(self.targetLocprobabdict)
         while True:
             cellscore = self.getcellscores(currentlocation)
-            minscore = min(cellscore.values())
-            choices = list(filter(lambda x: cellscore[x] == minscore, cellscore))
-            tosearch = choices[randint(0, len(choices) - 1)]
+            tosearch = self.getcelltosearch(cellscore, 0)
             # current location is best and is re-searched
             if currentlocation == tosearch:
                 actions += 1
@@ -170,38 +243,100 @@ class ProbabilisticHunting:
             else:
                 actions += 2
             p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
-            if tosearch == self.target:
-                success = np.random.choice(np.arange(2), 1, p=[p, 1 - p])[0]
-                if success:
-                    # print()
-                    # print(choices)
-                    return tosearch, actions
+            if self.istargetfound(tosearch, p):
+                return tosearch, actions
             # observation includes two chances target not being there or target not being found there even though it
             # was there
-            observation = 1 - self.targetLocprobabdict.get(tosearch) + p * self.targetLocprobabdict.get(tosearch)
-            self.updateprobabilities(tosearch, observation)
-            # print(currentlocation,end = " ")
+            self.updateprobabilities(tosearch, p)
             currentlocation = tosearch
+
+    def gamerule4(self):
+        currentlocation = (-1, -1)
+        actions = 0
+        while True:
+            tosearch = self.getcellusingonesteplookahead()
+            # current location is best and is re-searched
+            if currentlocation == tosearch:
+                actions += 1
+            # move to new location and search
+            else:
+                actions += 2
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            if self.istargetfound(tosearch, p):
+                return tosearch, actions
+            # observation includes two chances target not being there or target not being found there even though it
+            # was there
+            self.updateprobabilities(tosearch, p)
+            currentlocation = tosearch
+
+    def gamerule5(self):
+        currentlocation = (-1, -1)
+        actions = 0
+        while True:
+            tosearch = self.getcellusingonesteplookaheadscore(currentlocation)
+            # current location is best and is re-searched
+            if currentlocation == tosearch:
+                actions += 1
+            # move to new location and search
+            else:
+                actions += 2
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            if self.istargetfound(tosearch, p):
+                return tosearch, actions
+            # observation includes two chances target not being there or target not being found there even though it
+            # was there
+            self.updateprobabilities(tosearch, p)
+            currentlocation = tosearch
+
+    def gamerule6(self):
+        currentlocation = (-1, -1)
+        actions = 0
+        while True:
+            tosearch = self.getcellusingonesteplookaheadscorei()
+            # current location is best and is re-searched
+            if currentlocation == tosearch:
+                actions += 1
+            # move to new location and search
+            else:
+                actions += 2
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            if self.istargetfound(tosearch, p):
+                return tosearch, actions
+            # observation includes two chances target not being there or target not being found there even though it
+            # was there
+            self.updateprobabilities(tosearch, p)
+            currentlocation = tosearch
+
+
 
 
 # All the agents are included
 # actions means how many steps did it take to find the target
 def main():
     input1 = int(input("Enter the size: "))
-    prob = [0.2, 0.3, 0.3, 0.2]               # The map is divided with theses probabilities, equalling total to 1
-    diffProbDict = {0: 0.1, 1: 0.3, 2: 0.7, 3: 0.9}             # Probabilities under each closed block at random
-    landscape = ProbabilisticHunting(input1, prob, diffProbDict)    # object creation and assigning values
-    landscape.create_landscape()                                    # Creating landscape
+    prob = [0.2, 0.3, 0.3, 0.2]  # The map is divided with theses probabilities, equalling total to 1
+    diffProbDict = {0: 0.1, 1: 0.3, 2: 0.7, 3: 0.9}  # Probabilities under each closed block at random
+    landscape = ProbabilisticHunting(input1, prob, diffProbDict)  # object creation and assigning values
+    landscape.create_landscape()  # Creating landscape
     # landscape.display_landscape()
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule1()))               # Agent 1
+    print("target cell and actions" + str(landscape.gamerule1()))  # Agent 1
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule2()))               # Agent 2
+    print("target cell and actions" + str(landscape.gamerule2()))  # Agent 2
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule3()))               # Agent 3
+    print("target cell and actions" + str(landscape.gamerule3()))  # Agent 3
+    landscape.probabilitydictionary()
+    print()
+    print("target cell and actions" + str(landscape.gamerule4()))  # Agent 4
+    landscape.probabilitydictionary()
+    print()
+    print("target cell and actions" + str(landscape.gamerule5()))  # Agent 5
+    landscape.probabilitydictionary()
+    # print()
+    # print("target cell and actions" + str(landscape.gamerule6()))  # Agent 6
     plt.show()
 
 
