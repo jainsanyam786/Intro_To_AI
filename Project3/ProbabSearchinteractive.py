@@ -7,6 +7,9 @@ import copy as cp
 
 
 class ProbabilisticHunting:
+    """
+    This class initializes the landscape with probabilities assigned to the cells randomly
+    """
 
     def __init__(self, size, probabilities, diffProbDict):
         self.size = size
@@ -27,6 +30,9 @@ class ProbabilisticHunting:
     # Later this matrix is converted into array and thus a landscape without GUI is created.
     # After this a target is randomly selected and printed on console
     def create_landscape(self):
+        """
+        creates the landscape
+        """
         num = [[np.random.choice(np.arange(4), 1, p=self.probabilities)[0] for i in range(self.size)] for j in
                range(self.size)]
         self.cells = set((x, y) for x in range(self.size) for y in range(self.size))
@@ -34,6 +40,9 @@ class ProbabilisticHunting:
         self.landscape = num_arr
 
     def getmanhtdis(self, a, b):
+        """
+        returns the Manhattan distance between the cells
+        """
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     # Landscape Display GUI based
@@ -55,40 +64,71 @@ class ProbabilisticHunting:
         ax.grid(color='k', linestyle='-', linewidth=2)
 
     def getcelltosearch(self, valuedict, maxormin):
+        """
+        gets the cell to search for target from valuedict
+        """
         if maxormin:
+            # if max, get the maximum probability among all the cells
             value = max(valuedict.values())
         else:
+            # otherwise, get the minimum probability among all the cells
             value = min(valuedict.values())
+        # filter valuedict based on value
         choices = list(filter(lambda x: valuedict[x] == value, valuedict))
+        # randomly choose one of them
         tosearch = choices[randint(0, len(choices) - 1)]
+        # and return that as the cell to search
         return tosearch
 
     def istargetfound(self, celltosearch, difficultprob):
+        """
+        checks if the target is found
+        """
         success = 0
+        # if the cell to be searched is the target
         if celltosearch == self.target:
+            # assigns 0 or 1 based on whether the target is found
             success = np.random.choice(np.arange(2), 1, p=[difficultprob, 1 - difficultprob])[0]
+        # return that value
         return success
 
     def getobservation(self, cellsearched, difficultprob):
+        """
+        get the observation from the cell being searched
+        """
+        # return the observation from the cell being searched
         observation = 1 - self.targetLocprobabdict.get(cellsearched) + difficultprob * self.targetLocprobabdict.get(
             cellsearched)
         return observation
 
     # Updating initial probabilities database
     def probabilitydictionary(self):
+        """
+        creates a dictionary of probabilities for all the cells in teh board
+        """
+        # sets the probabilities to 1/size^2
         [[self.targetLocprobabdict.update({(x, y): (1 / self.size ** 2)}) for y in range(self.size)]
          for x in range(self.size)]
 
-    # Updating each instance of probability database as per object
+    # Updating each instance of probability dictionary as per object
     # This is based on Part 1, both the equations of the part 1 are implemented below to update the probabilities
     # required for all the agents
     def updateprobabilities(self, tosearch, difficultprob):
+        """
+        update the probbailities for the cell being searched
+        """
+        # get the observation from the current cell
         observation = self.getobservation(tosearch, difficultprob)
+        # for every cell in the board
         for cell in self.targetLocprobabdict.keys():
+            # if the cell is the one being currently searched
             if cell is tosearch:
+                # get the probability from the cell being searched
                 p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+                # update the probability in the dictionary
                 prob = (self.targetLocprobabdict.get(cell) * p) / observation
             else:
+                # otherwise update the probability
                 prob = self.targetLocprobabdict.get(cell) / observation
             self.targetLocprobabdict.update({cell: prob})
 
@@ -96,7 +136,9 @@ class ProbabilisticHunting:
     # Probability dictionary of finding a target is created and updated
     def gettargetfoundprobabilities(self):
         targefoundprobabdict = {}
+        # for each cell in the board
         for cell in self.targetLocprobabdict.keys():
+            # set the probability for all the cells in the board based on the false positive rates
             foundprob = self.targetLocprobabdict.get(cell) * (
                     1 - self.diffProbDict.get(self.landscape[cell[0]][cell[1]]))
             targefoundprobabdict[cell] = foundprob
@@ -193,38 +235,61 @@ class ProbabilisticHunting:
         return meanscore
 
     def gamerule1(self):
+        """
+        Implements Agent 1
+        """
+        # intitialize the current location
         currentlocation = (-1, -1)
+        # set search count to 0 initially
         searchcount = 0
+        # set path length to 0 initially
         travellingactions = 0
         while True:
+            # get a cell to search
             tosearch = self.getcelltosearch(self.targetLocprobabdict, 1)
-            # current location is best and is re-searched
+            # increment number of search counts
             searchcount += 1
+            # add the Manhattan distance from the current location to the cell to be searched
             travellingactions += self.getmanhtdis(currentlocation, tosearch)
+            # get the probability from the false negative rates
             p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            # if target is found in that cell
             if self.istargetfound(tosearch, p):
+                # return the cell, search counts, path followed
                 return tosearch, searchcount, travellingactions + searchcount
-            # observation includes two chances target not being there or target not being found there even though it
-            # was there
+            # if not found, update the probabilities
             self.updateprobabilities(tosearch, p)
+            # set the current location to the cell that was just searched
             currentlocation = tosearch
 
     def gamerule2(self):
+        """
+        Implements Agent 2
+        """
+        # set the current location to (-1, -1)
         currentlocation = (-1, -1)
+        # set search counts to 0
         searchcount = 0
+        # set path length to 0
         travellingactions = 0
         while True:
+            # get the probabilities for all the cells in the board
             targefoundprobabdict = self.gettargetfoundprobabilities()
+            # get a cell to search
             tosearch = self.getcelltosearch(targefoundprobabdict, 1)
-            # current location is best and is re-searched
+            # increment the search count
             searchcount += 1
+            # update the path length
             travellingactions += self.getmanhtdis(currentlocation, tosearch)
+            # get the probability from the cell currently being searched
             p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            # if target is found
             if self.istargetfound(tosearch, p):
+                # return the parameters
                 return tosearch, searchcount, travellingactions + searchcount
-            # observation includes two chances target not being there or target not being found there even though it
-            # was there
+            # otherwise update the probabilities
             self.updateprobabilities(tosearch, p)
+            # set current location to the cell being searched
             currentlocation = tosearch
 
     def gamerule3(self):
