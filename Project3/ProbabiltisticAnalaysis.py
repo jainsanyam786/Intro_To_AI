@@ -1,79 +1,221 @@
-import ProbabSearchinteractive as psi
+import ProbablisticHunting as Ph
+import numpy as np
+import matplotlib.pyplot as plt
+import datetime as t
 
 
 # Create one method for Part 1 and other for Part 2
 
 class ProbabilisticAnalysis:
 
-    def __init__(self):
-        pass
+    def __init__(self, terrainprob, diffProbDict):
+        self.terrainprob = terrainprob
+        self.diffProbDict = diffProbDict
 
-    def samemap(self, input, prob, diffprobdict, terrain):
-        terrain.create_landscape()  # Creating landscape
-        for i in range(0, 3):
-            print()
-            print("Iteration: " + str(i))
-            print()
+    def disp_data1(self, data, varnames, xlable, ylabel, title):
+        """
+        This method is used to visualize data by displaying the graph
+        :param data: data to be plotted
+        :param varnames: variables to be plotted
+        :param xlable: x label
+        :param ylabel: y label
+        :param title: title
+        """
+        fig = plt.figure()  # Initializing figure
+        ax1 = fig.add_subplot()
+        ax1.set_xlabel(xlable)
+        ax1.set_ylabel(ylabel)
+        ax1.set_title(title)
+        datakeys = ["Plain", "Hills", "Forest", "Caves"]
 
-            terrain.probabilitydictionary()
-            print("Agent 1 target cell and actions" + str(terrain.gamerule1()))  # Agent 1
+        for index, var in enumerate(varnames):
+            toplot = list(map(lambda key: data.get(key)[index], data.keys()))
+            ax1.plot(datakeys, toplot, label=var)
+        ax1.legend(title="Agent")
+        ax1.grid(True)
 
-            terrain.probabilitydictionary()
-            print("Agent 2 target cell and actions" + str(terrain.gamerule2()))  # Agent 2
+    def disp_data2(self, data, xlable, ylabel, title):
+        """
+        This method is used to visualize data by displaying the graph
+        :param data: data to be plotted
+        :param varnames: variables to be plotted
+        :param xlable: x label
+        :param ylabel: y label
+        :param title: title
+        """
+        fig = plt.figure()  # Initializing figure
+        ax1 = fig.add_subplot()
+        ax1.set_xlabel(xlable)
+        ax1.set_ylabel(ylabel)
+        ax1.set_title(title)
+        datakeys = data.keys()
+        datavalues = data.values()
+        ax1.bar(datakeys, datavalues)
 
-            terrain.probabilitydictionary()
-            print("Agent 3 target cell and actions" + str(terrain.gamerule3()))  # Agent 3
+    def samemap(self, size, interations):
+        start_time = t.datetime.now()
+        print("Comparing Agent 1 and Agent 2 for fixed Map with Multiple Targets:: ")
+        ph = Ph.ProbabilisticHunting(size, self.terrainprob, self.diffProbDict)
+        targets = set()
+        ph.create_landscape()  # Creating landscape
+        agent1targetdict = {0: [], 1: [], 2: [], 3: []}
+        agent2targetdict = {0: [], 1: [], 2: [], 3: []}
+        averageserachcountfortarget = {0: [], 1: [], 2: [], 3: []}
+        averageserachcount = {"Agent1": [], "Agent2": []}
+        for i in range(0, interations):
+            while True:
+                newtarget = ph.settarget()
+                if targets == ph.cells:
+                    targets.clear()
+                    targets.add(newtarget)
+                    # ph.landscape[c[0]][c[1]])
+                elif newtarget not in targets:
+                    targets.add(newtarget)
+                    break
+            ph.probabilitydictionary()
+            agnet1searchcount = ph.gamerule1()[1]
+            ph.probabilitydictionary()
+            agnet2searchcount = ph.gamerule2()[1]
+            agent1targetdict.get(ph.landscape[newtarget[0]][newtarget[1]]).append(agnet1searchcount)
+            agent2targetdict.get(ph.landscape[newtarget[0]][newtarget[1]]).append(agnet2searchcount)
+        for val in agent1targetdict:
+            if agent1targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent1targetdict.get(val)))
+                averageserachcount["Agent1"].append(averageserachcountfortarget[val][0])
+            if agent2targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent2targetdict.get(val)))
+                averageserachcount["Agent2"].append(averageserachcountfortarget[val][1])
+        for val in averageserachcount:
+            if averageserachcount[val]:
+                averageserachcount[val] = np.mean(averageserachcount.get(val))
+        for val in averageserachcountfortarget:
+            if not averageserachcountfortarget.get(val):
+                averageserachcountfortarget[val] = [0, 0]
+        self.disp_data1(averageserachcountfortarget, ["Agent1", "Agent2"], "Terrain types", "Search Count", "Comparison"
+                        + " of Agent1 and Agent 2 for Fixed Map")
+        self.disp_data2(averageserachcount, "Agents", "Search Count", "Comparison"
+                        + " of Agent1 and Agent 2 for Fixed Map")
+        print((t.datetime.now() - start_time).seconds)
+        plt.show()
 
-            terrain.target = terrain.gettarget()
-            print("New target is " + str(terrain.target))
+    def multiple_map(self, size, interations):
+        start_time = t.datetime.now()
+        print("Comparing Agent 1 and Agent 2 for Multiple Maps:: ")
+        ph = Ph.ProbabilisticHunting(size, self.terrainprob, self.diffProbDict)
+        targets = set()
+        agent1targetdict = {0: [], 1: [], 2: [], 3: []}
+        agent2targetdict = {0: [], 1: [], 2: [], 3: []}
+        averageserachcountfortarget = {0: [], 1: [], 2: [], 3: []}
+        averageserachcount = {"Agent1": [], "Agent2": []}
+        for i in range(0, interations):
+            ph.create_landscape()
+            newtarget = ph.settarget()
+            targets.add(newtarget)
+            ph.probabilitydictionary()
+            agnet1searchcount = ph.gamerule1()[1]
+            ph.probabilitydictionary()
+            agnet2searchcount = ph.gamerule2()[1]
+            agent1targetdict.get(ph.landscape[newtarget[0]][newtarget[1]]).append(agnet1searchcount)
+            agent2targetdict.get(ph.landscape[newtarget[0]][newtarget[1]]).append(agnet2searchcount)
+        for val in agent1targetdict:
+            if agent1targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent1targetdict.get(val)))
+                averageserachcount["Agent1"].append(averageserachcountfortarget[val][0])
+            if agent2targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent2targetdict.get(val)))
+                averageserachcount["Agent2"].append(averageserachcountfortarget[val][1])
+        for val in averageserachcount:
+            if averageserachcount[val]:
+                averageserachcount[val] = np.mean(averageserachcount.get(val))
+        for val in averageserachcountfortarget:
+            if not averageserachcountfortarget.get(val):
+                averageserachcountfortarget[val] = [0, 0]
+        self.disp_data1(averageserachcountfortarget, ["Agent1", "Agent2"], "Terrain types", "Search Count", "Comparison"
+                        + " of Agent1 and Agent 2 for Multiple Map")
+        self.disp_data2(averageserachcount, "Agents", "Actions", "Comparison"
+                        + " of Agent1 and Agent 2 for Multiple Map")
+        plt.show()
 
-    def multiple_map(self, input, prob, diffprobdict, terrain):
-
-        terrain.create_landscape()  # Creating landscape
-        for i in range(0, 3):
-            print()
-            print("Iteration: " + str(i))
-            print()
-
-            terrain.probabilitydictionary()
-            print("Agent 1 target cell and actions" + str(terrain.gamerule1()))  # Agent 1
-
-            terrain.probabilitydictionary()
-            print("Agent 2 target cell and actions" + str(terrain.gamerule2()))  # Agent 2
-
-            terrain.probabilitydictionary()
-            print("Agent 3 target cell and actions" + str(terrain.gamerule3()))  # Agent 3
-
-            terrain.target = terrain.gettarget()
-            print("New target is " + str(terrain.target))
+    def compareall(self, size, interations):
+        start_time = t.datetime.now()
+        print("Comparing Agent 1 and Agent 2 for mixed map with multiple target:: ")
+        ph = Ph.ProbabilisticHunting(size, self.terrainprob, self.diffProbDict)
+        targets = set()
+        agent1targetdict = {0: [], 1: [], 2: [], 3: []}
+        agent2targetdict = {0: [], 1: [], 2: [], 3: []}
+        agent3targetdict = {0: [], 1: [], 2: [], 3: []}
+        agent4targetdict = {0: [], 1: [], 2: [], 3: []}
+        agent5targetdict = {0: [], 1: [], 2: [], 3: []}
+        averageserachcountfortarget = {0: [], 1: [], 2: [], 3: []}
+        averageserachcount = {"Agnet1": [], "Agnet2": [], "Agnet3": [], "Agnet4": [], "Agnet5": []}
+        for i in range(0, interations):
+            ph.create_landscape()
+            newtarget = ph.settarget()
+            targets.add(newtarget)
+            ph.probabilitydictionary()
+            agnet1actions = ph.gamerule1()[2]
+            ph.probabilitydictionary()
+            agnet2actions = ph.gamerule2()[2]
+            ph.probabilitydictionary()
+            agnet3actions = ph.gamerule3()[2]
+            ph.probabilitydictionary()
+            agnet4actions = ph.gamerule4()[2]
+            ph.probabilitydictionary()
+            agnet5actions = ph.gamerule5()[2]
+            targetterrain = ph.landscape[newtarget[0]][newtarget[1]]
+            agent1targetdict.get(targetterrain).append(agnet1actions)
+            agent2targetdict.get(targetterrain).append(agnet2actions)
+            agent3targetdict.get(targetterrain).append(agnet3actions)
+            agent4targetdict.get(targetterrain).append(agnet4actions)
+            agent5targetdict.get(targetterrain).append(agnet5actions)
+        for val in agent1targetdict:
+            if agent1targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent1targetdict.get(val)))
+                averageserachcount["Agnet1"].append(averageserachcountfortarget[val][0])
+        for val in agent2targetdict:
+            if agent2targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent2targetdict.get(val)))
+                averageserachcount["Agnet2"].append(averageserachcountfortarget[val][1])
+        for val in agent3targetdict:
+            if agent3targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent3targetdict.get(val)))
+                averageserachcount["Agnet3"].append(averageserachcountfortarget[val][2])
+        for val in agent4targetdict:
+            if agent4targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent4targetdict.get(val)))
+                averageserachcount["Agnet4"].append(averageserachcountfortarget[val][3])
+        for val in agent5targetdict:
+            if agent5targetdict.get(val):
+                averageserachcountfortarget[val].append(np.mean(agent5targetdict.get(val)))
+                averageserachcount["Agnet5"].append(averageserachcountfortarget[val][4])
+        for val in averageserachcountfortarget:
+            averageserachcountfortarget[val].append(np.mean(agent2targetdict.get(val)))
+        averageserachcount["Agnet1"] = np.mean(averageserachcount["Agnet1"])
+        averageserachcount["Agnet2"] = np.mean(averageserachcount["Agnet2"])
+        self.disp_data1(averageserachcountfortarget, ["Agent1", "Agent2"], "Terrain types", "Search Count", "Comparison"
+                        + " of Agent1 and Agent 2 for fixed map")
+        self.disp_data2(averageserachcount, "Agents", "Search Count", "")
+        plt.show()
 
 
 def main():
-    input1 = int(input("Enter the size: "))
-    prob = [0.2, 0.3, 0.3, 0.2]  # The map is divided with theses probabilities, equalling total to 1
-    diffProbDict = {0: 0.1, 1: 0.3, 2: 0.7, 3: 0.9}  # Probabilities under each closed block at random
-    landscape = psi.ProbabilisticHunting(input1, prob, diffProbDict)  # object creation and assigning values
-
-    landscape.create_landscape()  # Creating landscape
-    for i in range(0, 3):
-        print()
-        print("Iteration: " + str(i))
-        print()
-
-        landscape.probabilitydictionary()
-        print("Agent 1 target cell and actions" + str(landscape.gamerule1()))  # Agent 1
-
-        landscape.probabilitydictionary()
-        print("Agent 2 target cell and actions" + str(landscape.gamerule2()))  # Agent 2
-
-        landscape.probabilitydictionary()
-        print("Agent 3 target cell and actions" + str(landscape.gamerule3()))  # Agent 3
-
-        landscape.target = landscape.gettarget()
-        print("New target is " + str(landscape.target))
-
-    ProbabilisticAnalysis.samemap(input1, prob, diffProbDict, landscape)
-    ProbabilisticAnalysis.multiple_map(input1, prob, diffProbDict, landscape)
+    print("Scenario to Analyse")
+    print("1 - Compare Agent 1 and Agent 2 for multiple targets across fixed map")
+    print("2 - Compare Agent 1 and Agent 2 across muliple maps")
+    print("3 - Compare all Agents across muliple maps")
+    print()
+    analysistype = int(input("Enter the scenario to analyse from above options (1, 2, 3) "))
+    size = int(input("Enter the size: "))
+    iterations = int(input("Enter the number of iterations: "))
+    terrainprob = [0.2, 0.3, 0.3, 0.2]
+    diffProbDict = {0: 0.1, 1: 0.3, 2: 0.7, 3: 0.9}
+    pa = ProbabilisticAnalysis(terrainprob, diffProbDict)
+    if analysistype == 1:
+        pa.samemap(size, iterations)
+    elif analysistype == 2:
+        pa.multiple_map(size, iterations)
+    elif analysistype == 3:
+        pa.compareall(size, iterations)
 
 
 if __name__ == '__main__':
