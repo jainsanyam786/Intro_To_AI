@@ -8,6 +8,45 @@ class ProbabilisticAnalysis:
     def __init__(self):
         pass
 
+    def samemap(self, input, prob, diffprobdict, terrain):
+        terrain.create_landscape()  # Creating landscape
+        for i in range(0, 3):
+            print()
+            print("Iteration: " + str(i))
+            print()
+
+            terrain.probabilitydictionary()
+            print("Agent 1 target cell and actions" + str(terrain.gamerule1()))  # Agent 1
+
+            terrain.probabilitydictionary()
+            print("Agent 2 target cell and actions" + str(terrain.gamerule2()))  # Agent 2
+
+            terrain.probabilitydictionary()
+            print("Agent 3 target cell and actions" + str(terrain.gamerule3()))  # Agent 3
+
+            terrain.target = terrain.gettarget()
+            print("New target is " + str(terrain.target))
+
+    def multiple_map(self, input, prob, diffprobdict, terrain):
+
+        terrain.create_landscape()  # Creating landscape
+        for i in range(0, 3):
+            print()
+            print("Iteration: " + str(i))
+            print()
+
+            terrain.probabilitydictionary()
+            print("Agent 1 target cell and actions" + str(terrain.gamerule1()))  # Agent 1
+
+            terrain.probabilitydictionary()
+            print("Agent 2 target cell and actions" + str(terrain.gamerule2()))  # Agent 2
+
+            terrain.probabilitydictionary()
+            print("Agent 3 target cell and actions" + str(terrain.gamerule3()))  # Agent 3
+
+            terrain.target = terrain.gettarget()
+            print("New target is " + str(terrain.target))
+
 
 def main():
     input1 = int(input("Enter the size: "))
@@ -32,6 +71,9 @@ def main():
 
         landscape.target = landscape.gettarget()
         print("New target is " + str(landscape.target))
+
+    ProbabilisticAnalysis.samemap(input1, prob, diffProbDict, landscape)
+    ProbabilisticAnalysis.multiple_map(input1, prob, diffProbDict, landscape)
 
 
 if __name__ == '__main__':
