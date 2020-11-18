@@ -205,26 +205,30 @@ class ProbabilisticAnalysis:
         start_time = t.datetime.now()
         print("Comparing all agents for moving targets:: ")
         ph = Ph.ProbabilisticHunting(size, self.terrainprob, self.diffProbDict)
-        targets = set()
         averageactions = {"Agents1": [], "Agents2": [], "Agents3": [], "Agents4": [], "Agents5": []}
         for i in range(0, interations):
             print("iteration :: " + str(i))
             ph.create_landscape()
             newtarget = ph.settarget()
-            targets.add(newtarget)
             ph.probabilitydictionary()
             Agents1actions = ph.mtgamerule1()[2]
             ph.probabilitydictionary()
+            ph.target = newtarget
             Agents2actions = ph.mtgamerule2()[2]
             ph.probabilitydictionary()
+            ph.target = newtarget
             Agents3actions = ph.mtgamerule3()[2]
             ph.probabilitydictionary()
+            ph.target = newtarget
             Agents4actions = ph.mtgamerule4()[2]
+            ph.probabilitydictionary()
+            ph.target = newtarget
+            Agents5actions = ph.mtgamerule5()[2]
             averageactions["Agents1"].append(Agents1actions)
             averageactions["Agents2"].append(Agents2actions)
             averageactions["Agents3"].append(Agents3actions)
             averageactions["Agents4"].append(Agents4actions)
-            averageactions["Agents5"].append(Agents4actions)
+            averageactions["Agents5"].append(Agents5actions)
         for val in averageactions:
             averageactions[val] = np.mean(averageactions.get(val))
         self.disp_data2(averageactions, "Agents", "Actions", "Comparison"
