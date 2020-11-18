@@ -140,7 +140,7 @@ class ProbabilisticAnalysis:
 
     def compareall(self, size, interations):
         start_time = t.datetime.now()
-        print("Comparing Agent 1 and Agent 2 for mixed map with multiple target:: ")
+        print("Comparing all agents for multiple maps:: ")
         ph = Ph.ProbabilisticHunting(size, self.terrainprob, self.diffProbDict)
         targets = set()
         agent1targetdict = {0: [], 1: [], 2: [], 3: []}
@@ -194,8 +194,38 @@ class ProbabilisticAnalysis:
             if not averageserachcountfortarget.get(val):
                 averageserachcountfortarget[val] = [0, 0]
         self.disp_data1(averageserachcountfortarget, ["Agent1", "Agent2", "Agent3", "Agent4"], "Terrain types",
-                        "Search Count", "Comparison"
+                        "Actions", "Comparison"
                         + " of all agents")
+        self.disp_data2(averageserachcount, "Agents", "Actions", "Comparison"
+                        + " of all agents")
+        print((t.datetime.now() - start_time).seconds)
+        plt.show()
+
+    def compareallformovingtarget(self, size, interations):
+        start_time = t.datetime.now()
+        print("Comparing Agent 1 and Agent 2 for mixed map with multiple target:: ")
+        ph = Ph.ProbabilisticHunting(size, self.terrainprob, self.diffProbDict)
+        targets = set()
+        averageserachcount = {"Agents1": [], "Agents2": [], "Agents3": [], "Agents4": []}
+        for i in range(0, interations):
+            print("iteration :: " + str(i))
+            ph.create_landscape()
+            newtarget = ph.settarget()
+            targets.add(newtarget)
+            ph.probabilitydictionary()
+            Agents1actions = ph.mtgamerule1()[2]
+            ph.probabilitydictionary()
+            Agents2actions = ph.mtgamerule2()[2]
+            ph.probabilitydictionary()
+            Agents3actions = ph.mtgamerule3()[2]
+            ph.probabilitydictionary()
+            Agents4actions = ph.mtgamerule4()[2]
+            averageserachcount["Agents1"].append(Agents1actions)
+            averageserachcount["Agents2"].append(Agents2actions)
+            averageserachcount["Agents3"].append(Agents3actions)
+            averageserachcount["Agents4"].append(Agents4actions)
+        for val in averageserachcount:
+            averageserachcount[val] = np.mean(averageserachcount.get(val))
         self.disp_data2(averageserachcount, "Agents", "Search Count", "Comparison"
                         + " of all agents")
         print((t.datetime.now() - start_time).seconds)
@@ -207,8 +237,9 @@ def main():
     print("1 - Compare Agent 1 and Agent 2 for multiple targets across fixed map")
     print("2 - Compare Agent 1 and Agent 2 across muliple maps")
     print("3 - Compare all Agents across muliple maps")
+    print("4 - Compare all Agents across muliple maps with moving targets")
     print()
-    analysistype = int(input("Enter the scenario to analyse from above options (1, 2, 3) "))
+    analysistype = int(input("Enter the scenario to analyse from above options (1, 2, 3, 4) "))
     size = int(input("Enter the size: "))
     iterations = int(input("Enter the number of iterations: "))
     terrainprob = [0.2, 0.3, 0.3, 0.2]
@@ -220,6 +251,8 @@ def main():
         pa.multiple_map(size, iterations)
     elif analysistype == 3:
         pa.compareall(size, iterations)
+    elif analysistype == 4:
+        pa.compareallformovingtarget(size, iterations)
 
 
 if __name__ == '__main__':

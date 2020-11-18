@@ -361,6 +361,196 @@ class ProbabilisticHunting:
             self.updateprobabilities(tosearch, p)
             currentlocation = tosearch
 
+    ############################################################# PART 2 ################################################
+
+    def movetarget(self):
+        x, y = self.target[0], self.target[1]
+        neigh = [(nx, ny) for nx in [x - 1, x, x + 1] for ny in [y - 1, y, y + 1] if (nx, ny) != (x, y) if
+                 (nx, ny) in self.cells]
+        nextstep = neigh[randint(0, len(neigh) - 1)]
+        self.target = nextstep
+
+    def iswithin5(self, currentlocation):
+        if self.getmanhtdis(currentlocation, self.target) <= 5:
+            return True
+        return False
+
+    def getcellclust(self, currentlocation):
+        within5cells = set()
+        outof5cells = set()
+        for cell in self.cells:
+            if self.getmanhtdis(currentlocation, cell) <= 5:
+                within5cells.add(cell)
+            else:
+                outof5cells.add(cell)
+        return within5cells, outof5cells
+
+    def updateprobabilitydictionary(self, listcell, cellsearched, difficultprob, useobservation):
+        """
+        creates a dictionary of probabilities for all the cells in teh board
+        """
+        # sets the probabilities to 1/size^2
+        size = len(listcell)
+        for cell in self.cells:
+            if cell in listcell:
+                self.targetLocprobabdict.update({cell: (1 / size ** 2)})
+            else:
+                self.targetLocprobabdict.update({cell: 0})
+        if useobservation:
+            observation = self.getobservation(cellsearched, difficultprob)
+            for cell in listcell:
+                # if the cell is the one being currently searched
+                if cell is cellsearched:
+                    # get the probability from the cell being searched
+                    prob = (self.targetLocprobabdict.get(cell) * difficultprob) / observation
+                else:
+                    # otherwise update the probability
+                    prob = self.targetLocprobabdict.get(cell) / observation
+                self.targetLocprobabdict.update({cell: prob})
+
+    def mtgamerule1(self):
+        """
+        Implements Agent 1
+        """
+        # intitialize the current location
+        currentlocation = (-1, -1)
+        # set search count to 0 initially
+        searchcount = 0
+        # set path length to 0 initially
+        travellingactions = 0
+        while True:
+            # get a cell to search
+            tosearch = self.getcelltosearch(self.targetLocprobabdict, 1)
+            # increment number of search counts
+            searchcount += 1
+            # add the Manhattan distance from the current location to the cell to be searched
+            travellingactions += self.getmanhtdis(currentlocation, tosearch)
+            # get the probability from the false negative rates
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            # if target is found in that cell
+            if self.istargetfound(tosearch, p):
+                # return the cell, search counts, path followed
+                return tosearch, searchcount, travellingactions + searchcount
+            # set the current location to the cell that was just searched
+            currentlocation = tosearch
+            # move target
+            self.movetarget()
+            if self.iswithin5(currentlocation):
+                cellstoupdate = self.getcellclust(currentlocation)[0]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, True)
+            else:
+                cellstoupdate = self.getcellclust(currentlocation)[1]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, False)
+
+    def mtgamerule2(self):
+        """
+        Implements Agent 1
+        """
+        # intitialize the current location
+        currentlocation = (-1, -1)
+        # set search count to 0 initially
+        searchcount = 0
+        # set path length to 0 initially
+        travellingactions = 0
+        while True:
+            # get a cell to search
+            # get the probabilities for all the cells in the board
+            targefoundprobabdict = self.gettargetfoundprobabilities()
+            # get a cell to search
+            tosearch = self.getcelltosearch(targefoundprobabdict, 1)
+            # increment number of search counts
+            searchcount += 1
+            # add the Manhattan distance from the current location to the cell to be searched
+            travellingactions += self.getmanhtdis(currentlocation, tosearch)
+            # get the probability from the false negative rates
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            # if target is found in that cell
+            if self.istargetfound(tosearch, p):
+                # return the cell, search counts, path followed
+                return tosearch, searchcount, travellingactions + searchcount
+            # set the current location to the cell that was just searched
+            currentlocation = tosearch
+            # move target
+            self.movetarget()
+            if self.iswithin5(currentlocation):
+                cellstoupdate = self.getcellclust(currentlocation)[0]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, True)
+            else:
+                cellstoupdate = self.getcellclust(currentlocation)[1]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, False)
+
+    def mtgamerule3(self):
+        """
+        Implements Agent 1
+        """
+        # intitialize the current location
+        currentlocation = (-1, -1)
+        # set search count to 0 initially
+        searchcount = 0
+        # set path length to 0 initially
+        travellingactions = 0
+        while True:
+            # get a cell to search
+            # get the probabilities for all the cells in the board
+            cellscore = self.getcellscores(currentlocation)
+            # get a cell to search
+            tosearch = self.getcelltosearch(cellscore, 0)
+            # increment number of search counts
+            searchcount += 1
+            # add the Manhattan distance from the current location to the cell to be searched
+            travellingactions += self.getmanhtdis(currentlocation, tosearch)
+            # get the probability from the false negative rates
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            # if target is found in that cell
+            if self.istargetfound(tosearch, p):
+                # return the cell, search counts, path followed
+                return tosearch, searchcount, travellingactions + searchcount
+            # set the current location to the cell that was just searched
+            currentlocation = tosearch
+            # move target
+            self.movetarget()
+            if self.iswithin5(currentlocation):
+                cellstoupdate = self.getcellclust(currentlocation)[0]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, True)
+            else:
+                cellstoupdate = self.getcellclust(currentlocation)[1]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, False)
+
+    def mtgamerule4(self):
+        """
+        Implements Agent 1
+        """
+        # intitialize the current location
+        currentlocation = (-1, -1)
+        # set search count to 0 initially
+        searchcount = 0
+        # set path length to 0 initially
+        travellingactions = 0
+        while True:
+            # get a cell to search
+            # get the probabilities for all the cells in the board
+            tosearch = self.getcellusingonesteplookaheadscore(currentlocation)
+            # increment number of search counts
+            searchcount += 1
+            # add the Manhattan distance from the current location to the cell to be searched
+            travellingactions += self.getmanhtdis(currentlocation, tosearch)
+            # get the probability from the false negative rates
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            # if target is found in that cell
+            if self.istargetfound(tosearch, p):
+                # return the cell, search counts, path followed
+                return tosearch, searchcount, travellingactions + searchcount
+            # set the current location to the cell that was just searched
+            currentlocation = tosearch
+            # move target
+            self.movetarget()
+            if self.iswithin5(currentlocation):
+                cellstoupdate = self.getcellclust(currentlocation)[0]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, True)
+            else:
+                cellstoupdate = self.getcellclust(currentlocation)[1]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, False)
+
 
 # All the agents are included
 # actions means how many steps did it take to find the target
@@ -371,7 +561,7 @@ def main():
     landscape = ProbabilisticHunting(input1, prob, diffProbDict)  # object creation and assigning values
     landscape.create_landscape()
     landscape.settarget()
-    # landscape.display_landscape()
+    landscape.display_landscape()
     landscape.probabilitydictionary()
     print()
     print("target cell and actions" + str(landscape.gamerule1()))  # Agent 1
@@ -390,6 +580,18 @@ def main():
     landscape.probabilitydictionary()
     print()
     print("target cell and actions" + str(landscape.gamerule6()))  # Agent 6
+    landscape.probabilitydictionary()
+    print()
+    print("target cell and actions" + str(landscape.mtgamerule1()))  # Agent 1
+    landscape.probabilitydictionary()
+    print()
+    print("target cell and actions" + str(landscape.mtgamerule2()))  # Agent 2
+    landscape.probabilitydictionary()
+    print()
+    print("target cell and actions" + str(landscape.mtgamerule3()))  # Agent 3
+    landscape.probabilitydictionary()
+    print()
+    print("target cell and actions" + str(landscape.mtgamerule4()))  # Agent 4
     plt.show()
 
 
