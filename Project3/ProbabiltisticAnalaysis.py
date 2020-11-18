@@ -148,8 +148,8 @@ class ProbabilisticAnalysis:
         agent3targetdict = {0: [], 1: [], 2: [], 3: []}
         agent4targetdict = {0: [], 1: [], 2: [], 3: []}
         agent5targetdict = {0: [], 1: [], 2: [], 3: []}
-        averageserachcountfortarget = {0: [], 1: [], 2: [], 3: []}
-        averageserachcount = {"Agent1": [], "Agent2": [], "Agent3": [], "Agent4": [], "Agent5": []}
+        averageactionsfortarget = {0: [], 1: [], 2: [], 3: []}
+        averageactions = {"Agent1": [], "Agent2": [], "Agent3": [], "Agent4": [], "Agent5": []}
         for i in range(0, interations):
             print("iteration :: " + str(i))
             ph.create_landscape()
@@ -173,40 +173,40 @@ class ProbabilisticAnalysis:
             agent5targetdict.get(targetterrain).append(Agents5actions)
         for val in agent1targetdict:
             if agent1targetdict.get(val):
-                averageserachcountfortarget[val].append(np.mean(agent1targetdict.get(val)))
-                averageserachcount["Agent1"].append(averageserachcountfortarget[val][0])
+                averageactionsfortarget[val].append(np.mean(agent1targetdict.get(val)))
+                averageactions["Agent1"].append(averageactionsfortarget[val][0])
             if agent2targetdict.get(val):
-                averageserachcountfortarget[val].append(np.mean(agent2targetdict.get(val)))
-                averageserachcount["Agent2"].append(averageserachcountfortarget[val][1])
+                averageactionsfortarget[val].append(np.mean(agent2targetdict.get(val)))
+                averageactions["Agent2"].append(averageactionsfortarget[val][1])
             if agent3targetdict.get(val):
-                averageserachcountfortarget[val].append(np.mean(agent3targetdict.get(val)))
-                averageserachcount["Agent3"].append(averageserachcountfortarget[val][2])
+                averageactionsfortarget[val].append(np.mean(agent3targetdict.get(val)))
+                averageactions["Agent3"].append(averageactionsfortarget[val][2])
             if agent4targetdict.get(val):
-                averageserachcountfortarget[val].append(np.mean(agent4targetdict.get(val)))
-                averageserachcount["Agent4"].append(averageserachcountfortarget[val][3])
+                averageactionsfortarget[val].append(np.mean(agent4targetdict.get(val)))
+                averageactions["Agent4"].append(averageactionsfortarget[val][3])
             if agent5targetdict.get(val):
-                averageserachcountfortarget[val].append(np.mean(agent5targetdict.get(val)))
-                averageserachcount["Agent5"].append(averageserachcountfortarget[val][4])
-        for val in averageserachcount:
-            if averageserachcount[val]:
-                averageserachcount[val] = np.mean(averageserachcount.get(val))
-        for val in averageserachcountfortarget:
-            if not averageserachcountfortarget.get(val):
-                averageserachcountfortarget[val] = [0, 0, 0, 0, 0]
-        self.disp_data1(averageserachcountfortarget, ["Agent1", "Agent2", "Agent3", "Agent4", "Agent5"], "Terrain types",
+                averageactionsfortarget[val].append(np.mean(agent5targetdict.get(val)))
+                averageactions["Agent5"].append(averageactionsfortarget[val][4])
+        for val in averageactions:
+            if averageactions[val]:
+                averageactions[val] = np.mean(averageactions.get(val))
+        for val in averageactionsfortarget:
+            if not averageactionsfortarget.get(val):
+                averageactionsfortarget[val] = [0, 0, 0, 0, 0]
+        self.disp_data1(averageactionsfortarget, ["Agent1", "Agent2", "Agent3", "Agent4", "Agent5"], "Terrain types",
                         "Actions", "Comparison"
                         + " of all agents")
-        self.disp_data2(averageserachcount, "Agents", "Actions", "Comparison"
+        self.disp_data2(averageactions, "Agents", "Actions", "Comparison"
                         + " of all agents")
         print((t.datetime.now() - start_time).seconds)
         plt.show()
 
     def compareallformovingtarget(self, size, interations):
         start_time = t.datetime.now()
-        print("Comparing all agents for for moving targets:: ")
+        print("Comparing all agents for moving targets:: ")
         ph = Ph.ProbabilisticHunting(size, self.terrainprob, self.diffProbDict)
         targets = set()
-        averageserachcount = {"Agents1": [], "Agents2": [], "Agents3": [], "Agents4": [], "Agents5": []}
+        averageactions = {"Agents1": [], "Agents2": [], "Agents3": [], "Agents4": [], "Agents5": []}
         for i in range(0, interations):
             print("iteration :: " + str(i))
             ph.create_landscape()
@@ -220,14 +220,14 @@ class ProbabilisticAnalysis:
             Agents3actions = ph.mtgamerule3()[2]
             ph.probabilitydictionary()
             Agents4actions = ph.mtgamerule4()[2]
-            averageserachcount["Agents1"].append(Agents1actions)
-            averageserachcount["Agents2"].append(Agents2actions)
-            averageserachcount["Agents3"].append(Agents3actions)
-            averageserachcount["Agents4"].append(Agents4actions)
-            averageserachcount["Agents5"].append(Agents4actions)
-        for val in averageserachcount:
-            averageserachcount[val] = np.mean(averageserachcount.get(val))
-        self.disp_data2(averageserachcount, "Agents", "Actions", "Comparison"
+            averageactions["Agents1"].append(Agents1actions)
+            averageactions["Agents2"].append(Agents2actions)
+            averageactions["Agents3"].append(Agents3actions)
+            averageactions["Agents4"].append(Agents4actions)
+            averageactions["Agents5"].append(Agents4actions)
+        for val in averageactions:
+            averageactions[val] = np.mean(averageactions.get(val))
+        self.disp_data2(averageactions, "Agents", "Actions", "Comparison"
                         + " of all agents")
         print((t.datetime.now() - start_time).seconds)
         plt.show()
