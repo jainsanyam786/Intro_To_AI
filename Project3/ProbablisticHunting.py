@@ -11,6 +11,7 @@ class ProbabilisticHunting:
     This class initializes the landscape with probabilities assigned to the cells randomly
     """
 
+    # constructor for the landscape  initilaize the parameters for the landscape creation
     def __init__(self, size, probabilities, diffProbDict):
         self.size = size
         self.probabilities = probabilities
@@ -41,13 +42,17 @@ class ProbabilisticHunting:
 
     def getmanhtdis(self, a, b):
         """
-        returns the Manhattan distance between the cells
+        returns the Manhattan distance between the specified cells
         """
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     # Landscape Display GUI based
     # Coloring based on the probabilities assigned to each block
     def display_landscape(self):
+        """
+        displays the landscape
+        """
+        # define the colors for each cell in the landscape
         cmap = ListedColormap(['#FFFFFF', '#A0A0A0', '#009900', '#404040'])
         bounds = [0, 1, 2, 3, 4]
         norm = colors.BoundaryNorm(bounds, cmap.N)
@@ -73,7 +78,7 @@ class ProbabilisticHunting:
         else:
             # otherwise, get the minimum probability among all the cells
             value = min(valuedict.values())
-        # filter valuedict based on value
+        # get the list of cells based on the above value
         choices = list(filter(lambda x: valuedict[x] == value, valuedict))
         # randomly choose one of them
         tosearch = choices[randint(0, len(choices) - 1)]
@@ -147,10 +152,14 @@ class ProbabilisticHunting:
     # Function used to get the total score, i.e total steps taken by each agent
     def getcellscores(self, currentlocation):
         cellscores = {}
+        # get the dictionary containing the probabilities that the target is found (from the above function)
         targefoundprobabdict = self.gettargetfoundprobabilities()
+        # take the cell with the maximum value from this dictionary
         maxprobcell = max(targefoundprobabdict.values())
+        # get the list of cells which have this probability
         choices = list(filter(lambda x: targefoundprobabdict[x] == maxprobcell, targefoundprobabdict))
         for cell in choices:
+            # update the score using the Manhattan distance for each of these cells and return
             score = (1 + self.getmanhtdis(currentlocation, cell)) / maxprobcell
             cellscores[cell] = score
         return cellscores
@@ -180,16 +189,24 @@ class ProbabilisticHunting:
 
     def onesteplookahead(self, cell, copylocprobdict):
         tempprobdict = copylocprobdict
+        # get the probabilities from the cells in the landscape
         p = self.diffProbDict.get(self.landscape[cell[0]][cell[1]])
+        # get the observation from that cell
         observation = self.getobservation(cell, p)
         for c in tempprobdict.keys():
+            # if the cell is present in the dict
             if c is cell:
+                # update the probability of that cell using p and the observation
                 prob = (self.targetLocprobabdict.get(cell) * p) / observation
             else:
+                # otherwise, update the probability using only the observation
                 prob = self.targetLocprobabdict.get(cell) / observation
             probtofind = prob * (1 - self.diffProbDict.get(self.landscape[c[0]][c[1]]))
+            # update the cell's probability in the dictionary
             tempprobdict.update({c: probtofind})
+        # find the max probability in the dict
         maxvalue = max(tempprobdict.values())
+        # and get the cells having this probability
         choices = list(filter(lambda x: tempprobdict[x] == maxvalue, tempprobdict))
         return maxvalue, choices
 
