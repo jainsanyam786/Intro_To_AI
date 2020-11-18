@@ -170,7 +170,7 @@ class ProbabilisticHunting:
         choices = list(filter(lambda x: targefoundprobabdict[x] == maxprobcell, targefoundprobabdict))
         copylocprobdict = cp.deepcopy(self.targetLocprobabdict)
         maxprob = 0
-        minmeanscore = 0
+        minscore = 0
         bestcells = {}
         celltosearch = ()
         for cell in choices:
@@ -181,9 +181,9 @@ class ProbabilisticHunting:
         for cell in bestcells.keys():
             prob = bestcells.get(cell).get("prob")
             choices = bestcells.get(cell).get("choices")
-            meanscore = np.mean([(1 + self.getmanhtdis(cell, step)) / prob for step in choices])
-            if minmeanscore == 0 or meanscore < minmeanscore:
-                minmeanscore = meanscore
+            minscoreforcell = min([(1 + self.getmanhtdis(cell, step)) / prob for step in choices])
+            if minscore == 0 or minscoreforcell < minscore:
+                minscore = minscoreforcell
                 celltosearch = cell
         return celltosearch
 
@@ -215,12 +215,12 @@ class ProbabilisticHunting:
         minscore = min(cellscores.values())
         choices = list(filter(lambda x: cellscores[x] == minscore, cellscores))
         copylocprobdict = cp.deepcopy(self.targetLocprobabdict)
-        minmeanscore = 0
+        minscore = 0
         celltosearch = ()
         for cell in choices:
-            meanscore = self.onesteplookaheadscore(cell, copylocprobdict)
-            if minmeanscore == 0 or meanscore < minmeanscore:
-                minmeanscore = meanscore
+            minscoreforceell = self.onesteplookaheadscore(cell, copylocprobdict)
+            if minscore == 0 or minscoreforceell < minscore:
+                minscore = minscoreforceell
                 celltosearch = cell
         return celltosearch
 
@@ -248,8 +248,8 @@ class ProbabilisticHunting:
             tempprobdict.update({c: probtofind})
         maxprobcell = max(tempprobdict.values())
         choices = list(filter(lambda x: tempprobdict[x] == maxprobcell, tempprobdict))
-        meanscore = np.mean([(1 + self.getmanhtdis(cell, step)) / prob for step in choices])
-        return meanscore
+        minscore = min([(1 + self.getmanhtdis(cell, step)) / prob for step in choices])
+        return minscore
 
     def gamerule1(self):
         """
@@ -378,7 +378,8 @@ class ProbabilisticHunting:
             self.updateprobabilities(tosearch, p)
             currentlocation = tosearch
 
-    ############################################################# PART 2 ################################################
+    # ############################################################ PART 2
+    # ################################################
 
     def movetarget(self):
         x, y = self.target[0], self.target[1]
@@ -546,6 +547,41 @@ class ProbabilisticHunting:
         while True:
             # get a cell to search
             # get the probabilities for all the cells in the board
+            tosearch = self.getcellusingonesteplookahead()
+            # increment number of search counts
+            searchcount += 1
+            # add the Manhattan distance from the current location to the cell to be searched
+            travellingactions += self.getmanhtdis(currentlocation, tosearch)
+            # get the probability from the false negative rates
+            p = self.diffProbDict.get(self.landscape[tosearch[0]][tosearch[1]])
+            # if target is found in that cell
+            if self.istargetfound(tosearch, p):
+                # return the cell, search counts, path followed
+                return tosearch, searchcount, travellingactions + searchcount
+            # set the current location to the cell that was just searched
+            currentlocation = tosearch
+            # move target
+            self.movetarget()
+            if self.iswithin5(currentlocation):
+                cellstoupdate = self.getcellclust(currentlocation)[0]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, True)
+            else:
+                cellstoupdate = self.getcellclust(currentlocation)[1]
+                self.updateprobabilitydictionary(cellstoupdate, currentlocation, p, False)
+
+    def mtgamerule5(self):
+        """
+        Implements Agent 1
+        """
+        # intitialize the current location
+        currentlocation = (-1, -1)
+        # set search count to 0 initially
+        searchcount = 0
+        # set path length to 0 initially
+        travellingactions = 0
+        while True:
+            # get a cell to search
+            # get the probabilities for all the cells in the board
             tosearch = self.getcellusingonesteplookaheadscore(currentlocation)
             # increment number of search counts
             searchcount += 1
@@ -581,34 +617,37 @@ def main():
     landscape.display_landscape()
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule1()))  # Agent 1
+    print("target cell and actions for 1" + str(landscape.gamerule1()))  # Agent 1
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule2()))  # Agent 2
+    print("target cell and actions for 2" + str(landscape.gamerule2()))  # Agent 2
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule3()))  # Agent 3
+    print("target cell and actions for 3" + str(landscape.gamerule3()))  # Agent 3
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule4()))  # Agent 4
+    print("target cell and actions for 4" + str(landscape.gamerule4()))  # Agent 4
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule5()))  # Agent 5
+    print("target cell and actions for 5" + str(landscape.gamerule5()))  # Agent 5
+    landscape.probabilitydictionary()
+    # print()
+    # print("target cell and actions" + str(landscape.gamerule6()))  # Agent 6
+    # landscape.probabilitydictionary()
+    print()
+    print("target cell and actions for mt 1" + str(landscape.mtgamerule1()))  # Agent 1
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.gamerule6()))  # Agent 6
+    print("target cell and actions for mt 2" + str(landscape.mtgamerule2()))  # Agent 2
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.mtgamerule1()))  # Agent 1
+    print("target cell and actions for mt 3" + str(landscape.mtgamerule3()))  # Agent 3
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.mtgamerule2()))  # Agent 2
+    print("target cell and actions for mt 4" + str(landscape.mtgamerule4()))  # Agent 4
     landscape.probabilitydictionary()
     print()
-    print("target cell and actions" + str(landscape.mtgamerule3()))  # Agent 3
-    landscape.probabilitydictionary()
-    print()
-    print("target cell and actions" + str(landscape.mtgamerule4()))  # Agent 4
+    print("target cell and actions for mt 5" + str(landscape.mtgamerule5()))  # Agent 4
     plt.show()
 
 
