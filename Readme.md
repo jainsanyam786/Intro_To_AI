@@ -7,3 +7,7 @@ Project 1 -> Exploring Search.
 Project 2 -> MineSweeper.
 >Part 1 -> Basic and KnowledgeBase based.
 >Part 2 -> Probabilistic and Improved Probabilistic.
+
+Project 2 -> Probabilistic Hunting.
+>Part 1 -> Hunting a fixed target.
+>Part 2 -> Hunting a moving target.
